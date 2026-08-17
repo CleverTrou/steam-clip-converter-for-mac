@@ -65,11 +65,25 @@ committed `AppIcon.icns` into the bundle, and regenerates it from the SVG first 
 the SVG is newer and `rsvg-convert` is installed. The icon is placed before
 `codesign` runs, since the signature covers `Contents/Resources`.
 
-Known limitation: at 16 px the strip and the controller's interior detail fill in,
-and the mark reads as a plain lozenge. It resolves cleanly from 32 px up. The
-handoff specifies a simplified small-size variant (drop the face buttons and centre
-pill, keep the d-pad, thicken the knockout gap to ~4u) if 16 px legibility matters
-more than fidelity to the full artwork.
+An `.icns` is a set of independent rasters rather than one image scaled, so the
+small slots carry simplified geometry without affecting the large ones. Anything
+rendered into 32 physical pixels or fewer uses a size-specific variant:
+
+| Slot | Pixels | Source |
+|---|---|---|
+| `icon_16x16` | 16 | `icon-16.svg` |
+| `icon_16x16@2x`, `icon_32x32` | 32 | `icon-32.svg` |
+| `icon_32x32@2x` and up | 64–1024 | `icon-sequoia-1024.svg` |
+
+The full artwork collapses to a featureless lozenge at 16 px: the face buttons and
+centre pill fill in, the 3.1u knockout gap closes, and seven sprockets per row land
+below one pixel each. Both variants drop the face buttons and centre pill, keep the
+d-pad, and open the knockout gap to 4u, per the handoff. Measurement drove three
+further adaptations: the cast shadow is removed (a 3.4u blur is mush at this size),
+the glyph is scaled up (5.109 → 5.85 at 32 px, → 6.4 at 16 px), and the sprockets
+are reduced to four larger ones at 32 px and dropped entirely at 16 px. Container
+geometry, gradients and palette are untouched, so there is no visible seam at the
+switch point.
 
 macOS 26 note: a flat `.icns` still renders, but gets no Liquid Glass treatment,
 no dark/clear/tinted adaptation and no parallax. `design/app-icon/layers/` holds
