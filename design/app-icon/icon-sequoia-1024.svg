@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="body" x1="0.49" y1="0" x2="0.51" y2="1">
+      <stop offset="0" stop-color="#5BDDEC"></stop><stop offset="0.52" stop-color="#17A5C6"></stop><stop offset="1" stop-color="#0B7591"></stop>
+    </linearGradient>
+    <radialGradient id="spec" cx="0.5" cy="0.06" r="0.62">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.45"></stop><stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+    </radialGradient>
+    <clipPath id="squircle"><rect x="100" y="100" width="824" height="824" rx="185.4" ry="185.4"></rect></clipPath>
+    <filter id="blur1024" x="-40%" y="-40%" width="180%" height="200%"><feGaussianBlur stdDeviation="3.4"></feGaussianBlur></filter>
+    <mask id="strip1024" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+    <g transform="rotate(-8 50 50)">
+      <rect x="2" y="26" width="96" height="50" rx="8" fill="#fff"></rect>
+      <rect x="6" y="29" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="19.5" y="29" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="33" y="29" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="46.5" y="29" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="60" y="29" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="73.5" y="29" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="87" y="29" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="6" y="67" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="19.5" y="67" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="33" y="67" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="46.5" y="67" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="60" y="67" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="73.5" y="67" width="9" height="6" rx="2" fill="#000"></rect>
+      <rect x="87" y="67" width="9" height="6" rx="2" fill="#000"></rect>
+    </g>
+    <g transform="translate(50 46) scale(0.9) translate(-50 -56)"><path d="M30 38H70C78 38 84 42 86 50L90 62C92 69 87 74 82 71L72 63H28L18 71C13 74 8 69 10 62L14 50C16 42 22 38 30 38Z" fill="#000" stroke="#000" stroke-width="6.89" stroke-linejoin="round"></path></g>
+    </mask>
+    <mask id="ctrl1024" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+    <g transform="translate(50 46) scale(0.9) translate(-50 -56)"><path d="M30 38H70C78 38 84 42 86 50L90 62C92 69 87 74 82 71L72 63H28L18 71C13 74 8 69 10 62L14 50C16 42 22 38 30 38Z" fill="#fff"></path>
+    <rect x="29.5" y="45.5" width="5" height="13" rx="1.5" fill="#000"></rect>
+    <rect x="25.5" y="49.5" width="13" height="5" rx="1.5" fill="#000"></rect>
+    <circle cx="68" cy="46.6" r="2.8" fill="#000"></circle>
+    <circle cx="68" cy="57.4" r="2.8" fill="#000"></circle>
+    <circle cx="62.6" cy="52" r="2.8" fill="#000"></circle>
+    <circle cx="73.4" cy="52" r="2.8" fill="#000"></circle>
+    <rect x="46.5" y="49.5" width="7" height="5" rx="2.5" fill="#000"></rect>
+    </g>
+    </mask>
+  </defs>
+  <g clip-path="url(#squircle)">
+    <rect x="100" y="100" width="824" height="824" fill="url(#body)"></rect>
+    <rect x="100" y="100" width="824" height="824" fill="url(#spec)"></rect>
+  </g>
+  
+  <g transform="translate(256.5 256.5) scale(5.109)">
+    <rect width="100" height="100" fill="#fff" opacity="0.52" mask="url(#strip1024)"></rect>
+    <g transform="translate(50 46) scale(0.9) translate(-50 -56)" opacity="0.42"><path d="M30 38H70C78 38 84 42 86 50L90 62C92 69 87 74 82 71L72 63H28L18 71C13 74 8 69 10 62L14 50C16 42 22 38 30 38Z" fill="#000" filter="url(#blur1024)" transform="translate(0 7.78)"></path></g>
+    <rect width="100" height="100" fill="#fff" mask="url(#ctrl1024)"></rect>
+  </g>
+</svg>

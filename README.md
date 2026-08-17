@@ -58,6 +58,23 @@ composition, same passthrough export:
 description, software, author, publisher, creation date, plus app ID, game, source
 folder, kind, capture format and codec. `.mp4` remains available for sharing.
 
+## App icon
+
+Source artwork lives in `design/app-icon/` as SVG. `make-app.sh` copies the
+committed `AppIcon.icns` into the bundle, and regenerates it from the SVG first if
+the SVG is newer and `rsvg-convert` is installed. The icon is placed before
+`codesign` runs, since the signature covers `Contents/Resources`.
+
+Known limitation: at 16 px the strip and the controller's interior detail fill in,
+and the mark reads as a plain lozenge. It resolves cleanly from 32 px up. The
+handoff specifies a simplified small-size variant (drop the face buttons and centre
+pill, keep the d-pad, thicken the knockout gap to ~4u) if 16 px legibility matters
+more than fidelity to the full artwork.
+
+macOS 26 note: a flat `.icns` still renders, but gets no Liquid Glass treatment,
+no dark/clear/tinted adaptation and no parallax. `design/app-icon/layers/` holds
+pre-positioned back/front SVGs ready for Icon Composer if that becomes relevant.
+
 ## Build
 
 ```sh

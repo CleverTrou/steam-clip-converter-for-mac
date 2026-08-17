@@ -15,6 +15,15 @@ rm -rf "$BUNDLE"
 mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources"
 cp "$BIN" "$BUNDLE/Contents/MacOS/SteamClipConverter"
 
+# Icon. Regenerated from the SVG source whenever it is newer than the .icns and a
+# rasteriser is available; the committed .icns keeps the build working without one.
+ICON_DIR="design/app-icon"
+if [ "$ICON_DIR/icon-sequoia-1024.svg" -nt "$ICON_DIR/AppIcon.icns" ] \
+   && command -v rsvg-convert >/dev/null 2>&1; then
+    ( cd "$ICON_DIR" && ./make-icon.sh )
+fi
+cp "$ICON_DIR/AppIcon.icns" "$BUNDLE/Contents/Resources/AppIcon.icns"
+
 cat > "$BUNDLE/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -23,6 +32,7 @@ cat > "$BUNDLE/Contents/Info.plist" <<'PLIST'
     <key>CFBundleName</key><string>Steam Clip Converter</string>
     <key>CFBundleDisplayName</key><string>Steam Clip Converter for Mac</string>
     <key>CFBundleExecutable</key><string>SteamClipConverter</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundleIdentifier</key><string>com.trevornelson.steamclipconverter</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>1.0</string>
