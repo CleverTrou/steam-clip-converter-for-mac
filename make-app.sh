@@ -9,16 +9,23 @@ APP_NAME="Steam Clip Converter for Mac"
 BUNDLE="build/$APP_NAME.app"
 
 # Universal (Apple silicon + Intel) by default, since the result is what gets
-# published. Multi-arch builds need full Xcode, not just the Command Line Tools;
-# UNIVERSAL=0 builds for this Mac's architecture only.
+# published. Each architecture is built on its own and the two are joined with
+# lipo: a single `swift build --arch arm64 --arch x86_64` depends on whichever
+# build backend that SwiftPM release uses for multi-arch, and not every
+# supported toolchain has one. UNIVERSAL=0 builds for this Mac only, faster.
 if [ "${UNIVERSAL:-1}" = 1 ]; then
-    ARCHS=(--arch arm64 --arch x86_64)
+    SLICES=()
+    for arch in arm64 x86_64; do
+        swift build -c release --arch "$arch"
+        SLICES+=("$(swift build -c release --arch "$arch" --show-bin-path)/SteamClipConverter")
+    done
+    BIN=".build/universal/SteamClipConverter"
+    mkdir -p "$(dirname "$BIN")"
+    lipo -create "${SLICES[@]}" -output "$BIN"
 else
-    ARCHS=()
+    swift build -c release
+    BIN=$(swift build -c release --show-bin-path)/SteamClipConverter
 fi
-# ${ARCHS[@]+...}: macOS's bash 3.2 treats an empty array as unbound under set -u.
-swift build -c release ${ARCHS[@]+"${ARCHS[@]}"}
-BIN=$(swift build -c release ${ARCHS[@]+"${ARCHS[@]}"} --show-bin-path)/SteamClipConverter
 
 rm -rf "$BUNDLE"
 mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources"

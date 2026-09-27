@@ -143,9 +143,10 @@ pre-positioned back/front SVGs ready for Icon Composer if that becomes relevant.
 ./make-app.sh          # -> build/Steam Clip Converter for Mac.app
 ```
 
-Requires macOS 15 and Xcode 16 or later. The build is universal (Apple silicon
-and Intel), which needs full Xcode. With only the Command Line Tools, run
-`UNIVERSAL=0 ./make-app.sh` to build for your own Mac.
+Requires macOS 15 and a Swift 6 toolchain (Xcode 16 or later). The script builds
+Apple silicon and Intel separately and joins them into one universal binary with
+`lipo`. `UNIVERSAL=0 ./make-app.sh` builds for your own Mac only, which is
+faster.
 
 The bundle is ad-hoc signed and unsandboxed, so it can read cloud-synced folders
 without security-scoped bookmarks. That is also why the published download is not
