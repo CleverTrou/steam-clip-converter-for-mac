@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The "Reveal in Finder" link under the recordings folder is readable. It was
-  white text on the light sidebar. (PR_LINK)
+  white text on the light sidebar. ([#2](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/2))
 
 ## [1.0.1] - 2026-09-27
 
