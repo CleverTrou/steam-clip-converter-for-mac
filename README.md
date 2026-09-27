@@ -33,6 +33,27 @@ xattr -dr com.apple.quarantine "/Applications/Steam Clip Converter for Mac.app"
 If you'd rather not run an unsigned binary, [build it yourself](#build). It
 takes one command.
 
+## Recording with Steam
+
+This app converts recordings; the Steam client makes them. To turn recording on,
+open **Steam > Settings > Game Recording** and choose **Record in Background**,
+which captures everything you play, or **Record on Demand**, which captures only
+when you start it. Valve's own guides cover the rest, including disk limits,
+per-game settings and shortcut keys:
+
+- [Steam Game Recording](https://help.steampowered.com/en/faqs/view/23B7-49AD-4A28-9590)
+  on Steam Support
+- [Steam Game Recording](https://store.steampowered.com/gamerecording), Valve's
+  overview of the feature
+
+Background recordings are temporary. Once the disk space you gave them fills up,
+Steam overwrites the oldest footage, so convert anything you want to keep before
+then, or save it as a clip in Steam.
+
+The same settings page shows where recordings are saved and lets you pick
+another folder. Point this app at that folder, or at a synced copy of it if you
+record on a different machine.
+
 ## Why the output of other tools won't play in QuickTime
 
 HEVC in MP4 has two possible sample-entry fourccs:

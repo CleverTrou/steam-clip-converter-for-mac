@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to open it the first time. ([#1](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/1))
 - Released under the MIT license. The About window shows the copyright.
   ([#1](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/1))
+- The README links to Valve's guides for turning on Steam Game Recording, and
+  warns that background recordings are overwritten once their disk space fills.
+  ([#1](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/1))
 
 ### Fixed
 
