@@ -187,12 +187,20 @@ modified or deleted.
 
 Its only network request asks the Steam store for game names, sending just the
 numeric app IDs of the games you recorded. There are no analytics and no
-accounts. The list of converted clips and the cached game names stay in
-`~/Library/Application Support/Steam Clip Converter`.
+accounts. Everything else stays on your Mac:
 
-Exported `.mov` files carry the game, the Steam app ID, the capture time and the
-recording's folder name as metadata. They never include your username or any
-file path.
+- `~/Library/Application Support/Steam Clip Converter/Conversions.json` records
+  each converted clip: its full output path, when it was converted, and the
+  format.
+- `GameNames.json` in the same folder caches app ID → game name lookups.
+- The recordings folder you choose is remembered, as a full path, in the app's
+  preferences (`UserDefaults`).
+
+Exported files carry the game and its Steam app ID as metadata, plus the capture
+time when the recording's folder name includes one, as Steam's normally do.
+`.mov` exports also carry the recording's folder name (e.g.
+`bg_250820_20260816_163103`). Exports never include your username or any file
+path.
 
 ## License
 
