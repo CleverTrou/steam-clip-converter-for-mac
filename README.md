@@ -8,6 +8,54 @@ Steam stores recordings as DASH segments — a `session.mpd` manifest plus dozen
 
 **No ffmpeg. No third-party dependencies.** The entire pipeline is AVFoundation.
 
+## Download
+
+Get the latest `.zip` from
+[Releases](https://github.com/CleverTrou/steam-clip-converter-for-mac/releases/latest),
+unzip it, and move the app to Applications. It needs macOS 15 or later and runs
+natively on both Apple silicon and Intel Macs.
+
+The app is not notarized by Apple, so the first launch is blocked with "Apple
+could not verify … is free of malware". To open it once, and from then on:
+
+1. Try to open the app, then click **Done** on the warning.
+2. Open **System Settings → Privacy & Security**, scroll to the bottom, and click
+   **Open Anyway** next to Steam Clip Converter for Mac.
+3. Confirm with your password or Touch ID.
+
+On macOS 15, Control-clicking the app and choosing **Open** no longer bypasses
+the warning. You can also clear the quarantine flag in Terminal:
+
+```sh
+xattr -dr com.apple.quarantine "/Applications/Steam Clip Converter for Mac.app"
+```
+
+If you'd rather not run a prebuilt download, [build it from source](#build). It
+takes one command. A local build is also ad-hoc signed and unnotarized, but
+macOS doesn't quarantine apps you build yourself, so it opens without the
+warning.
+
+## Recording with Steam
+
+This app converts recordings; the Steam client makes them. To turn recording on,
+open **Steam > Settings > Game Recording** and choose **Record in Background**,
+which captures everything you play, or **Record on Demand**, which captures only
+when you start it. Valve's own guides cover the rest, including disk limits,
+per-game settings and shortcut keys:
+
+- [Steam Game Recording](https://help.steampowered.com/en/faqs/view/23B7-49AD-4A28-9590)
+  on Steam Support
+- [Steam Game Recording](https://store.steampowered.com/gamerecording), Valve's
+  overview of the feature
+
+Background recordings are temporary. Once the disk space you gave them fills up,
+Steam overwrites the oldest footage, so convert anything you want to keep before
+then, or save it as a clip in Steam.
+
+The same settings page shows where recordings are saved and lets you pick
+another folder. Point this app at that folder, or at a synced copy of it if you
+record on a different machine.
+
 ## Why the output of other tools won't play in QuickTime
 
 HEVC in MP4 has two possible sample-entry fourccs:
@@ -95,9 +143,18 @@ pre-positioned back/front SVGs ready for Icon Composer if that becomes relevant.
 ./make-app.sh          # -> build/Steam Clip Converter for Mac.app
 ```
 
-Requires macOS 15 and a Swift 6 toolchain. The bundle is ad-hoc signed and
-unsandboxed, so it can read cloud-synced folders without security-scoped
-bookmarks. Distributing it would require signing, sandboxing and notarization.
+Requires macOS 15 and a Swift 6 toolchain (Xcode 16 or later). The script builds
+Apple silicon and Intel separately and joins them into one universal binary with
+`lipo`. `UNIVERSAL=0 ./make-app.sh` builds for your own Mac only, which is
+faster.
+
+The bundle is ad-hoc signed and unsandboxed, so it can read cloud-synced folders
+without security-scoped bookmarks. That is also why the published download is not
+notarized: notarization needs a paid Apple Developer ID. See [Download](#download).
+
+The app's version lives in the `Info.plist` written by `make-app.sh`, not in
+`Package.swift`. Bump `CFBundleShortVersionString` and `CFBundleVersion` there in
+every release.
 
 ## Layout
 
@@ -122,8 +179,33 @@ Three things cost real debugging time and are easy to hit again:
 3. **Fragmented MP4 needs `AVURLAssetPreferPreciseDurationAndTimingKey`,** or the
    duration is approximate and composition inserts can misbehave.
 
-## Safety
+## Safety and privacy
 
 The app only ever reads source recordings. It writes to a temp scratch directory
 and to the destination folder you choose. Nothing in a recordings folder is
 modified or deleted.
+
+Its only network request asks the Steam store for game names, sending just the
+numeric app IDs of the games you recorded. There are no analytics and no
+accounts. Everything else stays on your Mac:
+
+- `~/Library/Application Support/Steam Clip Converter/Conversions.json` records
+  each converted clip: its full output path, when it was converted, and the
+  format.
+- `GameNames.json` in the same folder caches app ID → game name lookups.
+- The recordings folder you choose is remembered, as a full path, in the app's
+  preferences (`UserDefaults`).
+
+Exported files carry the game and its Steam app ID as metadata, plus the capture
+time when the recording's folder name includes one, as Steam's normally do.
+`.mov` exports also carry the recording's folder name (e.g.
+`bg_250820_20260816_163103`), and that name becomes the file name when it has no
+capture time. That folder name is the only text copied from your disk, and
+exports never include a file path. Steam's own folder names hold just the app ID
+and capture time, so if you rename recording folders, whatever you type travels
+with the export.
+
+## License
+
+[MIT](LICENSE) © 2026 Trevor Nelson. You're free to use, modify and redistribute
+it, as long as the copyright notice and license stay with every copy.
