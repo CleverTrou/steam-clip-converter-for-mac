@@ -15,9 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A ready-to-run download on the GitHub release page. It runs natively on
   Apple silicon and Intel Macs. It is not notarized, so the README explains how
-  to open it the first time. (PR_LINK)
+  to open it the first time. ([#1](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/1))
 - Released under the MIT license. The About window shows the copyright.
-  (PR_LINK)
+  ([#1](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/1))
 
 ### Fixed
 
