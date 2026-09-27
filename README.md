@@ -199,8 +199,11 @@ accounts. Everything else stays on your Mac:
 Exported files carry the game and its Steam app ID as metadata, plus the capture
 time when the recording's folder name includes one, as Steam's normally do.
 `.mov` exports also carry the recording's folder name (e.g.
-`bg_250820_20260816_163103`). Exports never include your username or any file
-path.
+`bg_250820_20260816_163103`), and that name becomes the file name when it has no
+capture time. That folder name is the only text copied from your disk, and
+exports never include a file path. Steam's own folder names hold just the app ID
+and capture time, so if you rename recording folders, whatever you type travels
+with the export.
 
 ## License
 
