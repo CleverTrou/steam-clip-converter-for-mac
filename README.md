@@ -8,6 +8,31 @@ Steam stores recordings as DASH segments — a `session.mpd` manifest plus dozen
 
 **No ffmpeg. No third-party dependencies.** The entire pipeline is AVFoundation.
 
+## Download
+
+Get the latest `.zip` from
+[Releases](https://github.com/CleverTrou/steam-clip-converter-for-mac/releases/latest),
+unzip it, and move the app to Applications. It needs macOS 15 or later and runs
+natively on both Apple silicon and Intel Macs.
+
+The app is not notarized by Apple, so the first launch is blocked with "Apple
+could not verify … is free of malware". To open it once, and from then on:
+
+1. Try to open the app, then click **Done** on the warning.
+2. Open **System Settings → Privacy & Security**, scroll to the bottom, and click
+   **Open Anyway** next to Steam Clip Converter for Mac.
+3. Confirm with your password or Touch ID.
+
+On macOS 15, Control-clicking the app and choosing **Open** no longer bypasses
+the warning. You can also clear the quarantine flag in Terminal:
+
+```sh
+xattr -dr com.apple.quarantine "/Applications/Steam Clip Converter for Mac.app"
+```
+
+If you'd rather not run an unsigned binary, [build it yourself](#build). It
+takes one command.
+
 ## Why the output of other tools won't play in QuickTime
 
 HEVC in MP4 has two possible sample-entry fourccs:
@@ -95,9 +120,17 @@ pre-positioned back/front SVGs ready for Icon Composer if that becomes relevant.
 ./make-app.sh          # -> build/Steam Clip Converter for Mac.app
 ```
 
-Requires macOS 15 and a Swift 6 toolchain. The bundle is ad-hoc signed and
-unsandboxed, so it can read cloud-synced folders without security-scoped
-bookmarks. Distributing it would require signing, sandboxing and notarization.
+Requires macOS 15 and Xcode 16 or later. The build is universal (Apple silicon
+and Intel), which needs full Xcode. With only the Command Line Tools, run
+`UNIVERSAL=0 ./make-app.sh` to build for your own Mac.
+
+The bundle is ad-hoc signed and unsandboxed, so it can read cloud-synced folders
+without security-scoped bookmarks. That is also why the published download is not
+notarized: notarization needs a paid Apple Developer ID. See [Download](#download).
+
+The app's version lives in the `Info.plist` written by `make-app.sh`, not in
+`Package.swift`. Bump `CFBundleShortVersionString` and `CFBundleVersion` there in
+every release.
 
 ## Layout
 
@@ -122,8 +155,22 @@ Three things cost real debugging time and are easy to hit again:
 3. **Fragmented MP4 needs `AVURLAssetPreferPreciseDurationAndTimingKey`,** or the
    duration is approximate and composition inserts can misbehave.
 
-## Safety
+## Safety and privacy
 
 The app only ever reads source recordings. It writes to a temp scratch directory
 and to the destination folder you choose. Nothing in a recordings folder is
 modified or deleted.
+
+Its only network request asks the Steam store for game names, sending just the
+numeric app IDs of the games you recorded. There are no analytics and no
+accounts. The list of converted clips and the cached game names stay in
+`~/Library/Application Support/Steam Clip Converter`.
+
+Exported `.mov` files carry the game, the Steam app ID, the capture time and the
+recording's folder name as metadata. They never include your username or any
+file path.
+
+## License
+
+[MIT](LICENSE) © 2026 Trevor Nelson. You're free to use, modify and redistribute
+it, as long as the copyright notice and license stay with every copy.

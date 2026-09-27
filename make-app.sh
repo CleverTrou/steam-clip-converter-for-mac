@@ -8,8 +8,17 @@ cd "$(dirname "$0")"
 APP_NAME="Steam Clip Converter for Mac"
 BUNDLE="build/$APP_NAME.app"
 
-swift build -c release
-BIN=$(swift build -c release --show-bin-path)/SteamClipConverter
+# Universal (Apple silicon + Intel) by default, since the result is what gets
+# published. Multi-arch builds need full Xcode, not just the Command Line Tools;
+# UNIVERSAL=0 builds for this Mac's architecture only.
+if [ "${UNIVERSAL:-1}" = 1 ]; then
+    ARCHS=(--arch arm64 --arch x86_64)
+else
+    ARCHS=()
+fi
+# ${ARCHS[@]+...}: macOS's bash 3.2 treats an empty array as unbound under set -u.
+swift build -c release ${ARCHS[@]+"${ARCHS[@]}"}
+BIN=$(swift build -c release ${ARCHS[@]+"${ARCHS[@]}"} --show-bin-path)/SteamClipConverter
 
 rm -rf "$BUNDLE"
 mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources"
@@ -35,8 +44,9 @@ cat > "$BUNDLE/Contents/Info.plist" <<'PLIST'
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundleIdentifier</key><string>com.trevornelson.steamclipconverter</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>1.0</string>
-    <key>CFBundleVersion</key><string>1</string>
+    <key>CFBundleShortVersionString</key><string>1.0.1</string>
+    <key>CFBundleVersion</key><string>2</string>
+    <key>NSHumanReadableCopyright</key><string>© 2026 Trevor Nelson. MIT License.</string>
     <key>LSMinimumSystemVersion</key><string>15.0</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
@@ -46,6 +56,8 @@ cat > "$BUNDLE/Contents/Info.plist" <<'PLIST'
 PLIST
 
 # Ad-hoc signature: enough to launch locally without Gatekeeper complaints.
-codesign --force --sign - "$BUNDLE" >/dev/null 2>&1 || true
+# Not optional: Apple silicon refuses to run an arm64 binary with no signature
+# at all, so a failure here must stop the build rather than ship a dead app.
+codesign --force --sign - "$BUNDLE" >/dev/null
 
 echo "built $BUNDLE"
