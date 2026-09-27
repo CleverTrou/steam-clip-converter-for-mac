@@ -236,9 +236,13 @@ final class AppModel {
             conversionLabel = ""
             conversionProgress = 0
             let size = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
-            lastResult = failures.isEmpty
+            let result = failures.isEmpty
                 ? "Exported \(succeeded) clip\(succeeded == 1 ? "" : "s") (\(size)) to \(folder.lastPathComponent)."
                 : "Exported \(succeeded), failed \(failures.count). \(failures.joined(separator: "; "))"
+            lastResult = result
+            // The result appears in the export bar without taking focus, so a
+            // VoiceOver user would otherwise never hear that the batch finished.
+            AccessibilityNotification.Announcement(result).post()
         }
     }
 

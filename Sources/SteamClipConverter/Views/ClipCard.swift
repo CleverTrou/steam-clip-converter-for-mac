@@ -13,6 +13,8 @@ struct ClipCard: View {
 
     private var isConverted: Bool { conversion != nil }
 
+    private static let convertedGreen = Color(red: 0.11, green: 0.49, blue: 0.20)
+
     @State private var image: NSImage?
     @State private var scrubFraction: Double?
     @State private var scrubTask: Task<Void, Never>?
@@ -23,7 +25,34 @@ struct ClipCard: View {
         return CGFloat(p.width) / CGFloat(p.height)
     }
 
+    // A Button rather than a tap gesture: a gesture gives the card no keyboard
+    // focus, no button role and no VoiceOver action.
     var body: some View {
+        Button(action: onToggle) { card }
+            .buttonStyle(.plain)
+            // No .accessibilityElement(children:) here: it would replace the
+            // button with a generic element that VoiceOver cannot press.
+            .accessibilityLabel("\(clip.displayName), \(clip.dateLabel)")
+            .accessibilityValue(accessibilityDetails)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+            .task(id: clip.id) {
+                image = await MediaProbe.shared.poster(for: clip)
+            }
+    }
+
+    /// "3 minutes, 17 seconds, 3840x2160, 489 MB, Converted Aug 16, 2026 at
+    /// 4:40 PM, MOV" -- everything the card shows, with the duration spelled
+    /// out, since "3:17" reads badly. The explicit value replaces the card's
+    /// visible text, so anything left out here is never spoken.
+    private var accessibilityDetails: String {
+        let spoken = Duration.seconds(clip.duration.rounded())
+            .formatted(.units(allowed: [.hours, .minutes, .seconds], width: .wide))
+        var parts = [spoken, clip.resolutionLabel, clip.sizeLabel]
+        if let conversion { parts += [conversion.label, conversion.format] }
+        return parts.joined(separator: ", ")
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: 6) {
             thumbnail
             VStack(alignment: .leading, spacing: 3) {
@@ -32,9 +61,12 @@ struct ClipCard: View {
                         .font(.callout.weight(.medium))
                         .lineLimit(1)
                     if isConverted {
+                        // Hidden: checkmark symbols imply "selected" to VoiceOver,
+                        // and the card's value already says "converted".
                         Image(systemName: "checkmark.seal.fill")
                             .font(.caption)
                             .foregroundStyle(.green)
+                            .accessibilityHidden(true)
                     }
                 }
                 Label(clip.dateLabel, systemImage: "calendar")
@@ -49,13 +81,15 @@ struct ClipCard: View {
                     Text(clip.sizeLabel)
                 }
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.secondary)
                 .lineLimit(1)
 
+                // Secondary, not green: system green text on a light card is
+                // about 2:1. The seal beside the title carries the colour.
                 if let conversion {
                     Text("\(conversion.label) · \(conversion.format)")
                         .font(.caption2)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
             }
@@ -68,10 +102,6 @@ struct ClipCard: View {
                 .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
         )
         .contentShape(Rectangle())
-        .onTapGesture(perform: onToggle)
-        .task(id: clip.id) {
-            image = await MediaProbe.shared.poster(for: clip)
-        }
     }
 
     private var thumbnail: some View {
@@ -114,6 +144,7 @@ struct ClipCard: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title2)
                         .foregroundStyle(.white, Color.accentColor)
+                        .accessibilityHidden(true)
                         .padding(6)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                 } else if isConverted {
@@ -122,7 +153,8 @@ struct ClipCard: View {
                         .kerning(0.5)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 3)
-                        .background(.green.opacity(0.9), in: Capsule())
+                        // White on system green is about 2:1; this darker green is 5:1.
+                        .background(Self.convertedGreen, in: Capsule())
                         .foregroundStyle(.white)
                         .padding(6)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)

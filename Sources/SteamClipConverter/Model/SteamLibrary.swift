@@ -63,7 +63,10 @@ actor GameCatalog {
 
     func name(for appID: String) async -> String? {
         if let hit = names[appID] { return hit }
-        guard !inFlight.contains(appID), appID.allSatisfy(\.isNumber) else { return nil }
+        // ASCII digits only: `isNumber` alone also accepts "½" or "٣", which have
+        // no business in a query string built from a folder name.
+        guard !inFlight.contains(appID), !appID.isEmpty,
+              appID.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
         inFlight.insert(appID)
         defer { inFlight.remove(appID) }
 

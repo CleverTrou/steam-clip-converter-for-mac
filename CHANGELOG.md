@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Clip cards work with the keyboard and VoiceOver. Each card is a real button
+  that announces the game, date, duration, resolution, size, whether it is
+  selected, and when and to which format it was converted. ([#1](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/1))
+- VoiceOver announces the format picker, the destination folder, the
+  conversion progress, which filters are active, and when a batch finishes. ([#1](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/1))
+- Clip details, the "Converted" line, and the CONVERTED badge have enough
+  contrast to read. Some were about 2:1 before. ([#1](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/1))
+
+### Security
+
+- Game names are looked up only for Steam app IDs made of ASCII digits. ([#1](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/1))
+
 ## [1.0.0] - 2026-08-17
 
 First version.
@@ -29,3 +43,6 @@ First version.
   unreliable.
 - An app icon, with dedicated 16px and 32px variants that stay legible at small
   sizes.
+
+[Unreleased]: https://github.com/CleverTrou/steam-clip-converter-for-mac/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/CleverTrou/steam-clip-converter-for-mac/releases/tag/v1.0.0

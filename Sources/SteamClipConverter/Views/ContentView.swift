@@ -141,6 +141,8 @@ struct ContentView: View {
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .kerning(0.6)
+                    .accessibilityLabel("Summary")
+                    .accessibilityAddTraits(.isHeader)
                 SummaryRow(label: "Clips in folder", value: "\(model.clips.count)")
                 SummaryRow(label: "Shown after filters", value: "\(model.visibleClips.count)")
                 SummaryRow(label: "Selected", value: "\(model.selection.count)")
@@ -261,15 +263,19 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(model.conversionLabel).font(.callout)
                     ProgressView(value: model.conversionProgress)
+                        .accessibilityLabel(model.conversionLabel)
                 }
                 .padding(.horizontal, 16)
             } else {
                 HStack(alignment: .center, spacing: 20) {
                     VStack(alignment: .leading, spacing: 3) {
+                        // The captions above these two controls are visual only;
+                        // each control carries its own accessible name.
                         Text("Convert to format")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Picker("", selection: $model.container) {
+                            .accessibilityHidden(true)
+                        Picker("Convert to format", selection: $model.container) {
                             ForEach(ClipConverter.Container.allCases) { Text($0.rawValue).tag($0) }
                         }
                         .labelsHidden()
@@ -283,6 +289,7 @@ struct ContentView: View {
                         Text("Converted file destination")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
                         Button {
                             model.chooseOutputFolder()
                         } label: {
@@ -290,6 +297,8 @@ struct ContentView: View {
                                 .lineLimit(1)
                         }
                         .help(model.outputFolder.path)
+                        .accessibilityLabel("Converted file destination")
+                        .accessibilityValue(model.outputFolder.lastPathComponent)
                     }
 
                     Spacer(minLength: 8)
@@ -338,6 +347,7 @@ private struct SummaryRow: View {
             Text(value)
                 .font(.caption.monospacedDigit().weight(.medium))
         }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -362,5 +372,10 @@ private struct FilterRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // The circle/checkmark is the only visual cue for the active filter, so
+        // state it as a trait instead of letting VoiceOver read the symbol name.
+        .accessibilityLabel(title)
+        .accessibilityValue("\(count) clip\(count == 1 ? "" : "s")")
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }
