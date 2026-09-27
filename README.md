@@ -30,8 +30,10 @@ the warning. You can also clear the quarantine flag in Terminal:
 xattr -dr com.apple.quarantine "/Applications/Steam Clip Converter for Mac.app"
 ```
 
-If you'd rather not run an unnotarized app, [build it yourself](#build). It
-takes one command.
+If you'd rather not run a prebuilt download, [build it from source](#build). It
+takes one command. A local build is also ad-hoc signed and unnotarized, but
+macOS doesn't quarantine apps you build yourself, so it opens without the
+warning.
 
 ## Recording with Steam
 
