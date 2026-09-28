@@ -8,6 +8,11 @@ Steam stores recordings as DASH segments — a `session.mpd` manifest plus dozen
 
 **No ffmpeg. No third-party dependencies.** The entire pipeline is AVFoundation.
 
+![The app's window: a sidebar of filters by game, status and quality beside a grid of six recordings, two selected and two marked converted, with a Convert Selected button](docs/screenshot.png)
+
+*Shown with a synthetic demo library. See
+[design/screenshots](design/screenshots/).*
+
 ## Download
 
 Get the latest `.zip` from

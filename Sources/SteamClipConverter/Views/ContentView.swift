@@ -78,7 +78,9 @@ struct ContentView: View {
                         Label("Reveal in Finder", systemImage: "arrow.up.forward.app")
                             .font(.caption)
                     }
-                    .buttonStyle(.link)
+                    // Not .link: inside the sidebar List that style renders
+                    // white text on the light sidebar, which is nearly unreadable.
+                    .buttonStyle(.borderless)
                 }
             }
             .padding(.vertical, 4)
