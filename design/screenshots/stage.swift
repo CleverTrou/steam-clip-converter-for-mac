@@ -18,8 +18,10 @@ func attr(_ e: AXUIElement, _ n: String) -> Any? {
 
 guard let win = (attr(ax, "AXWindows") as? [AXUIElement])?.first else { print("no window"); exit(1) }
 var pos = CGPoint(x: x, y: y), size = CGSize(width: w, height: h)
-AXUIElementSetAttributeValue(win, "AXPosition" as CFString, AXValueCreate(.cgPoint, &pos)!)
-AXUIElementSetAttributeValue(win, "AXSize" as CFString, AXValueCreate(.cgSize, &size)!)
+// Stop here if the window can't be placed: a capture of the wrong bounds is useless.
+guard AXUIElementSetAttributeValue(win, "AXPosition" as CFString, AXValueCreate(.cgPoint, &pos)!) == .success,
+      AXUIElementSetAttributeValue(win, "AXSize" as CFString, AXValueCreate(.cgSize, &size)!) == .success
+else { print("could not position or size the window"); exit(1) }
 Thread.sleep(forTimeInterval: 1.5)
 
 var pressed: [String] = []

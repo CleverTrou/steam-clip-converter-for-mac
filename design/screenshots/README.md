@@ -34,7 +34,7 @@ Pass the library as a launch argument. UserDefaults reads the argument domain
 without saving it, so your real folder choice is untouched:
 
 ```sh
-open -n "build/Steam Clip Converter for Mac.app" \
+open -n "../../build/Steam Clip Converter for Mac.app" \
   --args -SteamClipConverter.libraryRoot /Users/Shared/Steam/gamerecordings
 ```
 
