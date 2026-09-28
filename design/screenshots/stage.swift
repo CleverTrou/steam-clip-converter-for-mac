@@ -27,8 +27,7 @@ func walk(_ e: AXUIElement, _ d: Int) {
     guard d < 40 else { return }
     if (attr(e, "AXRole") as? String) == "AXButton", let label = attr(e, "AXDescription") as? String,
        let hit = toPress.first(where: { label.hasPrefix($0) }), !pressed.contains(hit) {
-        AXUIElementPerformAction(e, "AXPress" as CFString)
-        pressed.append(hit)
+        if AXUIElementPerformAction(e, "AXPress" as CFString) == .success { pressed.append(hit) }
     }
     for c in (attr(e, "AXChildren") as? [AXUIElement] ?? []) { walk(c, d + 1) }
 }
