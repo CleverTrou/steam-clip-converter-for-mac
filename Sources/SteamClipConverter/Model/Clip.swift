@@ -19,6 +19,10 @@ struct Clip: Identifiable, Hashable {
     var probe: ProbeResult?
     var gameName: String?
 
+    /// Events from Steam's timeline that fall inside this clip. Exported as
+    /// chapters.
+    var markers: [ClipMarker] = []
+
     enum Kind: String, Hashable {
         case background = "Background Recording"
         case manual = "Manual Clip"

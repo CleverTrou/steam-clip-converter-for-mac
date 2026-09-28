@@ -48,6 +48,7 @@ struct ClipCard: View {
         let spoken = Duration.seconds(clip.duration.rounded())
             .formatted(.units(allowed: [.hours, .minutes, .seconds], width: .wide))
         var parts = [spoken, clip.resolutionLabel, clip.sizeLabel]
+        if !clip.markers.isEmpty { parts.append(eventsLabel) }
         if let conversion { parts += [conversion.label, conversion.format] }
         return parts.joined(separator: ", ")
     }
@@ -84,6 +85,14 @@ struct ClipCard: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
+                if !clip.markers.isEmpty {
+                    Label(eventsLabel, systemImage: "flag")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .help(clip.markers.map { "\(timeLabel($0.time))  \($0.title)" }.joined(separator: "\n"))
+                }
+
                 // Secondary, not green: system green text on a light card is
                 // about 2:1. The seal beside the title carries the colour.
                 if let conversion {
@@ -119,6 +128,20 @@ struct ClipCard: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
 
+                // Timeline events, as ticks along the bottom edge. Decorative:
+                // the card's spoken value already counts them.
+                if !clip.markers.isEmpty, clip.duration > 0 {
+                    ForEach(clip.markers, id: \.self) { marker in
+                        Capsule()
+                            .fill(.white)
+                            .frame(width: 3, height: 10)
+                            .shadow(color: .black.opacity(0.6), radius: 1)
+                            .offset(x: min(max(geo.size.width * marker.time / clip.duration - 1.5, 0), geo.size.width - 3))
+                    }
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                }
+
                 if isHovering, let scrubFraction {
                     // Scrub position indicator
                     GeometryReader { inner in
@@ -135,7 +158,7 @@ struct ClipCard: View {
                         Badge(text: "HEVC")
                     }
                     if isHovering, let scrubFraction {
-                        Badge(text: timeLabel(scrubFraction * clip.duration))
+                        Badge(text: scrubLabel(at: scrubFraction * clip.duration))
                     }
                 }
                 .padding(6)
@@ -192,6 +215,20 @@ struct ClipCard: View {
                 image = frame
             }
         }
+    }
+
+    private var eventsLabel: String {
+        "\(clip.markers.count) timeline event\(clip.markers.count == 1 ? "" : "s")"
+    }
+
+    /// The scrub time, plus the event under the pointer when there is one. The
+    /// window is a segment either way, since each position shows one segment.
+    private func scrubLabel(at time: Double) -> String {
+        let window = max(clip.segmentDuration / 2, 1)
+        guard let nearest = clip.markers.min(by: { abs($0.time - time) < abs($1.time - time) }),
+              abs(nearest.time - time) <= window
+        else { return timeLabel(time) }
+        return "\(timeLabel(time)) · \(nearest.title)"
     }
 
     private func timeLabel(_ seconds: Double) -> String {

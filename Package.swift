@@ -9,6 +9,11 @@ let package = Package(
             name: "SteamClipConverter",
             path: "Sources/SteamClipConverter",
             swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .testTarget(
+            name: "SteamClipConverterTests",
+            dependencies: ["SteamClipConverter"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
         )
     ]
 )

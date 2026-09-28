@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Steam timeline events become chapters in `.mov` exports, so QuickTime
+  Player and IINA can jump to them. Clips with events show ticks on their
+  thumbnail, and scrubbing near one shows its name. (PR_LINK)
+
 ### Fixed
 
 - The "Reveal in Finder" link under the recordings folder is readable. It was

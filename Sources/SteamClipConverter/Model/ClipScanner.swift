@@ -68,7 +68,7 @@ enum ClipScanner {
             recordedAt = f.date(from: "\(parts[2]) \(parts[3])")
         }
 
-        return Clip(
+        var clip = Clip(
             id: name,
             url: folder,
             appID: appID,
@@ -81,6 +81,8 @@ enum ClipScanner {
             probe: nil,
             gameName: nil
         )
+        clip.markers = SteamTimeline.markers(for: clip)
+        return clip
     }
 }
 

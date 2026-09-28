@@ -13,6 +13,30 @@ enum ClipConverter {
         var ext: String { self == .mov ? "mov" : "mp4" }
         /// .mov round-trips every metadata field; .mp4 silently drops some.
         var keepsAllMetadata: Bool { self == .mov }
+        /// QuickTime text chapter tracks are native to .mov.
+        var supportsChapters: Bool { self == .mov }
+    }
+
+    /// One chapter per timeline event. When the first event comes after the
+    /// opening, a chapter named after the game covers the time before it, since
+    /// chapters must start at zero and leave no gaps.
+    static func chapters(for clip: Clip, duration: CMTime) -> [ChapterWriter.Chapter] {
+        let total = duration.seconds
+        guard total > 0, !clip.markers.isEmpty else { return [] }
+        var starts: [(time: Double, title: String)] = []
+        for marker in clip.markers where marker.time < total {
+            // Events a fraction of a second apart would make unusable chapters.
+            if let last = starts.last, marker.time - last.time < 0.5 { continue }
+            starts.append((marker.time, marker.title))
+        }
+        guard !starts.isEmpty else { return [] }
+        if starts[0].time > 0.5 { starts.insert((0, clip.displayName), at: 0) } else { starts[0].time = 0 }
+        return starts.indices.map { i in
+            let end = i + 1 < starts.count ? starts[i + 1].time : total
+            return .init(title: starts[i].title,
+                         start: CMTime(seconds: starts[i].time, preferredTimescale: 600),
+                         duration: CMTime(seconds: end - starts[i].time, preferredTimescale: 600))
+        }
     }
 
     struct Output {
@@ -63,11 +87,6 @@ enum ClipConverter {
         }
         progress(0.3)
 
-        guard let session = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetPassthrough) else {
-            throw ConversionError.exportUnavailable
-        }
-        session.metadata = metadata(for: clip, container: container)
-
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         var destination = folder.appending(path: "\(clip.outputStem).\(container.ext)")
         var suffix = 2
@@ -75,6 +94,26 @@ enum ClipConverter {
             destination = folder.appending(path: "\(clip.outputStem) (\(suffix)).\(container.ext)")
             suffix += 1
         }
+
+        // An export session can't add tracks, so a clip with timeline events
+        // is rewritten sample by sample with a chapter track alongside.
+        // Clips without events keep the session path.
+        let chapters = chapters(for: clip, duration: composition.duration)
+        if container.supportsChapters, !chapters.isEmpty {
+            try await ChapterWriter.write(composition, chapters: chapters,
+                                          metadata: metadata(for: clip, container: container),
+                                          to: destination, fileType: container.fileType) { value in
+                progress(0.3 + value * 0.7)
+            }
+            progress(1.0)
+            let bytes = (try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? Int64) ?? 0
+            return Output(url: destination, bytes: bytes, seconds: Date().timeIntervalSince(started))
+        }
+
+        guard let session = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetPassthrough) else {
+            throw ConversionError.exportUnavailable
+        }
+        session.metadata = metadata(for: clip, container: container)
 
         let poll = Task {
             while !Task.isCancelled {
