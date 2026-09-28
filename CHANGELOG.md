@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Steam timeline events become chapters in `.mov` exports, so QuickTime
   Player and IINA can jump to them. Clips with events show ticks on their
-  thumbnail, and scrubbing near one shows its name. (PR_LINK)
+  thumbnail, and scrubbing near one shows its name. ([#3](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/3))
 
 ### Fixed
 
