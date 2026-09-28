@@ -34,6 +34,12 @@ func walk(_ e: AXUIElement, _ d: Int) {
 }
 if !toPress.isEmpty { walk(win, 0) }
 print("pressed:", pressed)
+// Fail rather than let the capture that follows record the wrong state.
+let missing = toPress.filter { !pressed.contains($0) }
+if !missing.isEmpty {
+    print("unmatched:", missing)
+    exit(1)
+}
 
 let infos = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]] ?? []
 for i in infos where (i[kCGWindowOwnerPID as String] as? Int32) == app.processIdentifier

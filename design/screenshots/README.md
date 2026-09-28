@@ -45,8 +45,8 @@ moving the window changes the saved window frame.
 
 ```sh
 swiftc -O -o stage stage.swift
-./stage <x> <y> 1440 900 "Conway's Garden, " "Seahorse Valley, "
-screencapture -x -R<x>,<y>,1440,900 raw.png
+./stage <x> <y> 1440 900 "Conway's Garden, " "Seahorse Valley, " \
+  && screencapture -x -R<x>,<y>,1440,900 raw.png
 ```
 
 `stage` activates the app, sizes the window, and presses the cards whose
