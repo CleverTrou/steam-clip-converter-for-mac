@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-29
+
 ### Added
 
 - Steam timeline events become chapters in `.mov` exports, so QuickTime
@@ -16,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pounced on you!"), screenshots you took, and map or chapter names. Clips
   with events show ticks on their thumbnail, and scrubbing near one shows its
   name. ([#3](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/3))
+
+### Changed
+
+- The download is a disk image (`.dmg`) instead of a `.zip`. Open it and drag
+  the app onto the Applications shortcut inside. ([#PR](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/PR))
 
 ### Fixed
 
@@ -75,6 +82,7 @@ First version.
 - An app icon, with dedicated 16px and 32px variants that stay legible at small
   sizes.
 
-[Unreleased]: https://github.com/CleverTrou/steam-clip-converter-for-mac/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/CleverTrou/steam-clip-converter-for-mac/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/CleverTrou/steam-clip-converter-for-mac/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/CleverTrou/steam-clip-converter-for-mac/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/CleverTrou/steam-clip-converter-for-mac/releases/tag/v1.0.0
