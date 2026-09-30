@@ -9,10 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Steam timeline events become chapters in `.mov` exports, so QuickTime
+  Player and IINA can jump to them: game events ("Meet Alyx", "A Hunter
+  pounced on you!"), screenshots you took, and map or chapter names. Clips
+  with events show ticks on their thumbnail, and scrubbing near one shows its
+  name. ([#3](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/3))
+
 ### Fixed
 
 - The "Reveal in Finder" link under the recordings folder is readable. It was
   white text on the light sidebar. ([#2](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/2))
+- Recording times are right outside UTC. Steam names recordings in UTC, and
+  the app read that as local time, so a clip from 8:26 PM Central showed as
+  1:26 AM the next day. Cards and exported filenames now show your local
+  time, and files exported under the old names are still recognized as
+  converted. ([#3](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/3))
 
 ## [1.0.1] - 2026-09-27
 

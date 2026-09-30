@@ -92,6 +92,8 @@ tagging propagates through probing, thumbnails, scrubbing and export alike.
   duration or file size in both directions.
 - **Converts by passthrough remux** — the bitstream is copied, never re-encoded.
   A 489 MB 4K clip converts in about a second.
+- **Turns Steam timeline events into chapters** in `.mov` exports, and marks
+  them on each clip's thumbnail. See [Timeline chapters](#timeline-chapters).
 - **Marks what's already converted** and leaves it in place, including files
   produced by other tools (matched on capture timestamp).
 
@@ -110,6 +112,33 @@ composition, same passthrough export:
 `.mov` also keeps custom `mdta` keys, so exports carry 12 fields: title,
 description, software, author, publisher, creation date, plus app ID, game, source
 folder, kind, capture format and codec. `.mp4` remains available for sharing.
+
+## Timeline chapters
+
+Steam keeps a timeline for each play session. Games that support the Steam
+Timeline API add events to it, such as a round starting or a boss fight, and
+Steam adds some of its own. The app reads that timeline and turns the events
+inside each recording into **chapters** in `.mov` exports. QuickTime Player
+and other AVFoundation apps read them, as do ffmpeg-based players such as IINA,
+so you can jump straight to a moment.
+Clips with events show ticks along the bottom of their thumbnail, and scrubbing
+near one shows its name.
+
+Steam stores this next to the recordings, and the app only reads it:
+
+- `gamerecording.pb`: an index of which recordings belong to which session,
+  and where each one starts within it
+- `timelines/*.json`: one file per session, with the events and their times
+
+Only games that call the Timeline API add their own events. The Steam store
+lists them under the **Steam Timeline** feature, and SteamDB can filter your
+library by it. Steam's own "recording failed" entries are skipped. Chapter
+titles come from Steam and the game, in your Steam client's language. `.mp4`
+exports have no chapters.
+
+Chapters don't touch the video or audio. A clip with events is written with an
+`AVAssetWriter` passthrough instead of an export session, and its audio and
+video bitstreams are byte-identical to an export without chapters.
 
 ## App icon
 

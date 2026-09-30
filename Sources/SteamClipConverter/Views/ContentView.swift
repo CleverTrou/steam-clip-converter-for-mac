@@ -283,8 +283,8 @@ struct ContentView: View {
                         .labelsHidden()
                         .frame(width: 190)
                         .help(model.container.keepsAllMetadata
-                              ? "QuickTime keeps all 12 metadata fields, including the Steam-specific ones."
-                              : "MPEG-4 is more portable for sharing, but drops the Steam-specific metadata.")
+                              ? "QuickTime keeps all 12 metadata fields, including the Steam-specific ones, and adds chapters for Steam timeline events."
+                              : "MPEG-4 is more portable for sharing, but drops the Steam-specific metadata and timeline chapters.")
                     }
 
                     VStack(alignment: .leading, spacing: 3) {

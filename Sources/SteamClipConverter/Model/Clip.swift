@@ -19,6 +19,10 @@ struct Clip: Identifiable, Hashable {
     var probe: ProbeResult?
     var gameName: String?
 
+    /// Events from Steam's timeline that fall inside this clip. Exported as
+    /// chapters.
+    var markers: [ClipMarker] = []
+
     enum Kind: String, Hashable {
         case background = "Background Recording"
         case manual = "Manual Clip"
@@ -54,6 +58,16 @@ struct Clip: Identifiable, Hashable {
         guard let recordedAt else { return "Date unknown" }
         return Self.shortDateFormatter.string(from: recordedAt)
     }
+
+    /// The `<yyyyMMdd>_<HHmmss>` in a folder name. Steam writes it in UTC
+    /// whatever the PC's time zone, matching the timeline's unix start time.
+    static let folderDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        f.dateFormat = "yyyyMMdd_HHmmss"
+        return f
+    }()
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
