@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The download is a disk image (`.dmg`) instead of a `.zip`. Open it and drag
-  the app onto the Applications shortcut inside. ([#PR](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/PR))
+  the app onto the Applications shortcut inside. ([#4](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/4))
 
 ### Fixed
 
