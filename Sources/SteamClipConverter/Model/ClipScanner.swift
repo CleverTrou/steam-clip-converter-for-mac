@@ -61,12 +61,7 @@ enum ClipScanner {
         let parts = name.split(separator: "_").map(String.init)
         // bg_<appid>_<yyyyMMdd>_<HHmmss>[_n]
         let appID = parts.count > 1 ? parts[1] : "unknown"
-        var recordedAt: Date?
-        if parts.count > 3 {
-            let f = DateFormatter()
-            f.dateFormat = "yyyyMMdd HHmmss"
-            recordedAt = f.date(from: "\(parts[2]) \(parts[3])")
-        }
+        let recordedAt = parts.count > 3 ? Clip.folderDateFormatter.date(from: "\(parts[2])_\(parts[3])") : nil
 
         var clip = Clip(
             id: name,

@@ -59,6 +59,16 @@ struct Clip: Identifiable, Hashable {
         return Self.shortDateFormatter.string(from: recordedAt)
     }
 
+    /// The `<yyyyMMdd>_<HHmmss>` in a folder name. Steam writes it in UTC
+    /// whatever the PC's time zone, matching the timeline's unix start time.
+    static let folderDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        f.dateFormat = "yyyyMMdd_HHmmss"
+        return f
+    }()
+
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateStyle = .medium

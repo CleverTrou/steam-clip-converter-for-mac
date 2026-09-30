@@ -53,10 +53,10 @@ enum ConversionStore {
             // unique capture time, so comparing digit-only forms is unambiguous:
             // "SteamVR_2026-08-16_16-31-03.mp4" -> "202608161631034" contains
             // "20260816163103".
+            // The folder's own digits, not local time: other tools name files
+            // from the folder, and so did this app before it read them as UTC.
             if match == nil, let recordedAt = clip.recordedAt {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyyMMddHHmmss"
-                let stamp = formatter.string(from: recordedAt)
+                let stamp = Clip.folderDateFormatter.string(from: recordedAt).filter(\.isNumber)
                 match = existing.first { url in
                     url.lastPathComponent.filter(\.isNumber).contains(stamp)
                 }
