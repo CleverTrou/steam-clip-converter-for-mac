@@ -15,10 +15,10 @@ Steam stores recordings as DASH segments — a `session.mpd` manifest plus dozen
 
 ## Download
 
-Get the latest `.zip` from
+Get the latest `.dmg` from
 [Releases](https://github.com/CleverTrou/steam-clip-converter-for-mac/releases/latest),
-unzip it, and move the app to Applications. It needs macOS 15 or later and runs
-natively on both Apple silicon and Intel Macs.
+open it, and drag the app onto the Applications shortcut beside it. It needs
+macOS 15 or later and runs natively on both Apple silicon and Intel Macs.
 
 The app is not notarized by Apple, so the first launch is blocked with "Apple
 could not verify … is free of malware". To open it once, and from then on:
@@ -175,6 +175,7 @@ pre-positioned back/front SVGs ready for Icon Composer if that becomes relevant.
 
 ```sh
 ./make-app.sh          # -> build/Steam Clip Converter for Mac.app
+./make-dmg.sh          # -> build/Steam-Clip-Converter-for-Mac-<version>.dmg, for a release
 ```
 
 Requires macOS 15 and a Swift 6 toolchain (Xcode 16 or later). The script builds
@@ -194,9 +195,9 @@ every release.
 
 ```
 Sources/SteamClipConverter/
-  Model/  Clip · ClipScanner (+MPD parser) · SteamLibrary · ConversionLedger
-          SupportDirectory · AppModel
-  Media/  DashAssembler · MediaProbe · ClipConverter
+  Model/  Clip · ClipScanner (+MPD parser) · SteamLibrary · SteamTimeline
+          ConversionLedger · SupportDirectory · AppModel
+  Media/  DashAssembler · MediaProbe · ClipConverter · ChapterWriter
   Views/  ContentView · ClipCard
 ```
 
