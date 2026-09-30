@@ -24,7 +24,7 @@ enum SteamTimeline {
     static func markers(for clip: Clip) -> [ClipMarker] {
         let root = clip.url.deletingLastPathComponent().deletingLastPathComponent()
         guard let placement = index(at: root)[clip.id],
-              let timeline = Timeline(contentsOf: root.appending(path: "timelines/\(placement.timelineID).json"))
+              let timeline = Self.timeline(at: root.appending(path: "timelines/\(placement.timelineID).json"))
         else { return [] }
 
         return timeline.entries.compactMap { entry -> ClipMarker? in
@@ -73,6 +73,13 @@ enum SteamTimeline {
     private static let cache = FileCache<[String: Placement]>()
 
     // MARK: - timelines/<id>.json
+
+    /// A session's recordings share one timeline, so parse it once per change.
+    static func timeline(at url: URL) -> Timeline? {
+        timelineCache.value(for: url) { Timeline(contentsOf: url) }
+    }
+
+    private static let timelineCache = FileCache<Timeline?>()
 
     struct Timeline {
         struct Entry {

@@ -77,11 +77,12 @@ enum ChapterWriter {
         guard writer.startWriting() else { throw WriteError.failed(writer.error) }
         writer.startSession(atSourceTime: .zero)
 
+        let aborter = DrainAborter()
         let allDrained = await withTaskGroup(of: Bool.self) { group -> Bool in
             for (index, pump) in pumps.enumerated() {
                 let queue = DispatchQueue(label: "chapter-writer.\(index)")
                 group.addTask {
-                    await drain(into: pump.input, on: queue) {
+                    await drain(into: pump.input, on: queue, aborter: aborter) {
                         guard let sample = pump.output.copyNextSampleBuffer() else { return nil }
                         if pump.isVideo, duration.seconds > 0 {
                             progress(min(CMSampleBufferGetPresentationTimeStamp(sample).seconds / duration.seconds, 1))
@@ -92,7 +93,7 @@ enum ChapterWriter {
             }
             group.addTask {
                 var remaining = samples[...]
-                return await drain(into: chapterInput, on: DispatchQueue(label: "chapter-writer.text")) {
+                return await drain(into: chapterInput, on: DispatchQueue(label: "chapter-writer.text"), aborter: aborter) {
                     remaining.popFirst()
                 }
             }
@@ -117,23 +118,28 @@ enum ChapterWriter {
     }
 
     /// Feeds `input` until `next` runs dry or an append fails, then marks it
-    /// finished. Returns false if an append failed.
-    private static func drain(into input: AVAssetWriterInput, on queue: DispatchQueue,
+    /// finished. Returns false if an append failed here or in a sibling drain.
+    private static func drain(into input: AVAssetWriterInput, on queue: DispatchQueue, aborter: DrainAborter,
                               next: @escaping () -> CMSampleBuffer?) async -> Bool {
         await withCheckedContinuation { (done: CheckedContinuation<Bool, Never>) in
+            // Only touched on `queue`, which the readiness callback also runs on.
             var finished = false
+            func finish(_ succeeded: Bool) {
+                finished = true
+                done.resume(returning: succeeded)
+            }
+            aborter.onAbort { queue.async { if !finished { finish(false) } } }
             input.requestMediaDataWhenReady(on: queue) {
                 while !finished && input.isReadyForMoreMediaData {
                     guard let sample = next() else {
-                        finished = true
                         input.markAsFinished()
-                        done.resume(returning: true)
+                        finish(true)
                         return
                     }
                     guard input.append(sample) else {
-                        finished = true
                         input.markAsFinished()
-                        done.resume(returning: false)
+                        finish(false)
+                        aborter.abort()
                         return
                     }
                 }
@@ -202,5 +208,31 @@ enum ChapterWriter {
               let sample
         else { throw WriteError.textFormatUnavailable }
         return sample
+    }
+}
+
+/// Stops every drain once one fails. A failed writer may never call another
+/// input's readiness block, so a drain waiting on one would hang the export
+/// and the partial file would never be cleaned up.
+final class DrainAborter: @unchecked Sendable {
+    private var handlers: [() -> Void] = []
+    private var aborted = false
+    private let lock = NSLock()
+
+    /// Runs `handler` on abort, or right away if that already happened.
+    func onAbort(_ handler: @escaping () -> Void) {
+        lock.lock()
+        guard !aborted else { lock.unlock(); handler(); return }
+        handlers.append(handler)
+        lock.unlock()
+    }
+
+    func abort() {
+        lock.lock()
+        let pending = aborted ? [] : handlers
+        aborted = true
+        handlers = []
+        lock.unlock()
+        pending.forEach { $0() }
     }
 }

@@ -46,3 +46,17 @@ final class ChapterTests: XCTestCase {
         XCTAssertFalse(ClipConverter.Container.mp4.supportsChapters)
     }
 }
+
+final class DrainAborterTests: XCTestCase {
+
+    func testAbortWakesEveryWaiterOnceAndLateOnesAtOnce() {
+        let aborter = DrainAborter()
+        var calls: [String] = []
+        aborter.onAbort { calls.append("video") }
+        aborter.onAbort { calls.append("audio") }
+        aborter.abort()
+        aborter.abort()
+        aborter.onAbort { calls.append("late") }
+        XCTAssertEqual(calls, ["video", "audio", "late"])
+    }
+}
