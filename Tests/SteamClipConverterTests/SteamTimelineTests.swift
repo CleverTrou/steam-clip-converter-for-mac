@@ -45,19 +45,69 @@ final class SteamTimelineTests: XCTestCase {
 
     // MARK: - Timeline JSON
 
-    func testTimelineReadsStringNumbersAndSkipsErrors() throws {
-        let json = """
-        {"daterecorded":"1786897865","starttime":"0","endtime":"2354034","entries":[
-          {"id":"1","time":"429813","type":"error","description":"#GameRecording_RecordingFailed"},
-          {"id":"2","time":"5000","type":"event","title":"Tank spawned","description":"Wave 3"},
-          {"id":"3","time":"9000","type":"usermarker","description":"#GameRecording_UserMarker"},
-          {"id":"4","time":12000,"duration":"4000","type":"event","name":"Horde"}
-        ]}
-        """
-        let timeline = try XCTUnwrap(SteamTimeline.Timeline(data: Data(json.utf8)))
-        XCTAssertEqual(timeline.entries.map(\.title), ["Tank spawned", "User marker", "Horde"])
-        XCTAssertEqual(timeline.entries.map(\.time), [5000, 9000, 12000])
-        XCTAssertEqual(timeline.entries.last?.duration, 4000)
+    private func timeline(_ entries: String, end: Int = 2_000_000) throws -> SteamTimeline.Timeline {
+        let json = #"{"daterecorded":"1790731591","starttime":"0","endtime":"\#(end)","entries":[\#(entries)]}"#
+        return try XCTUnwrap(SteamTimeline.Timeline(data: Data(json.utf8)))
+    }
+
+    /// Trimmed from a real Left 4 Dead 2 session.
+    func testEventsScreenshotsAndMapNamesBecomeMarkers() throws {
+        let parsed = try timeline("""
+          {"id":"1","time":"61252","type":"gamemode","mode":2},
+          {"id":"2","time":"221435","type":"state_description","title":"\\"Dead Center\\" - 1: Hotel"},
+          {"id":"4","time":"367639","type":"event","title":"A Hunter pounced on you!","description":"",
+           "icon":"steam_combat","priority":1000,"duration":"0","possible_clip":2},
+          {"id":"9","time":"662858","type":"event","title":"You used First Aid","description":"",
+           "icon":"steam_heart","priority":1000,"duration":"5000","possible_clip":2},
+          {"id":"18","time":"1190501","type":"state_description","title":""},
+          {"id":"20","time":"1235543","type":"screenshot","icon":"steam_screenshot","priority":1000,"handle":1},
+          {"id":"99","time":"1240000","type":"error","description":"#GameRecording_RecordingFailed"}
+        """)
+        XCTAssertEqual(parsed.entries.map(\.title),
+                       [#""Dead Center" - 1: Hotel"#, "A Hunter pounced on you!", "You used First Aid", "Screenshot"])
+        XCTAssertEqual(parsed.entries.map(\.time), [221_435, 367_639, 662_858, 1_235_543])
+        XCTAssertEqual(parsed.entries[2].duration, 5000)
+    }
+
+    /// Trimmed from a real Half-Life 2 session: the title and description
+    /// together make the name, and states that only last through a load
+    /// screen, repeat, or echo the chapter event are dropped.
+    func testDescriptionsJoinTitlesAndTransientStatesAreDropped() throws {
+        let parsed = try timeline("""
+          {"id":"31","time":"78531","type":"gamemode","mode":2},
+          {"id":"32","time":"78531","type":"state_description","title":"Loading..."},
+          {"id":"36","time":"79342","type":"phase","duration":"780406","phase_id":"#hl2_chapter1_title"},
+          {"id":"35","time":"79342","type":"event","title":"New Chapter","description":"POINT INSERTION",
+           "icon":"steam_bookmark","priority":40,"duration":"0","possible_clip":1},
+          {"id":"38","time":"80481","type":"state_description","title":"POINT INSERTION"},
+          {"id":"39","time":"99478","type":"event","title":"Meet Gman",
+           "description":"Rise and shine, Mr. Freeman. Rise and shine. ","icon":"npc_gman","priority":40},
+          {"id":"47","time":"454509","type":"state_description","title":"Loading..."},
+          {"id":"49","time":"455670","type":"state_description","title":"POINT INSERTION"},
+          {"id":"72","time":"898935","type":"event","title":"Achievement Progress",
+           "description":"Lambda Locator (1/45)","icon":"steam_achievement","priority":40}
+        """)
+        XCTAssertEqual(parsed.entries.map(\.title), [
+            "New Chapter: POINT INSERTION",
+            "Meet Gman: Rise and shine, Mr. Freeman. Rise and shine.",
+            "Achievement Progress: Lambda Locator (1/45)",
+        ])
+    }
+
+    func testALongStateThatNoEventNamesIsKept() throws {
+        let parsed = try timeline("""
+          {"time":"18750","type":"state_description","title":"In Menus"},
+          {"time":"20290","type":"state_description","title":"Loading..."},
+          {"time":"22403","type":"state_description","title":"In Menus"}
+        """, end: 78_531)
+        XCTAssertEqual(parsed.entries.map(\.title), ["In Menus"])
+        XCTAssertEqual(parsed.entries.map(\.time), [22_403])
+    }
+
+    /// Not yet seen in a real file: Steam's own marker, named by a token.
+    func testTokenOnlyEntriesAreMadeReadable() throws {
+        let parsed = try timeline(##"{"time":"9000","type":"usermarker","description":"#GameRecording_UserMarker"}"##)
+        XCTAssertEqual(parsed.entries.map(\.title), ["User marker"])
     }
 
     func testReadableTurnsTokensIntoSentences() {

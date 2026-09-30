@@ -16,8 +16,8 @@ struct ClipMarker: Hashable {
 ///
 /// A timeline spans a whole session and usually covers several recordings, so
 /// the index's per-recording offset is what places an event inside a clip.
-/// Timeline times are milliseconds from the session start; the folder names
-/// are local wall-clock time, so they are never used for alignment.
+/// Timeline times are milliseconds from the session start. Folder names only
+/// carry whole seconds, so they are never used for alignment.
 enum SteamTimeline {
 
     /// Markers for `clip`, or none if Steam left no timeline for it.
@@ -78,7 +78,6 @@ enum SteamTimeline {
         struct Entry {
             let time: Double          // ms from the timeline start
             let duration: Double?     // ms, for events that span time
-            let type: String
             let title: String
         }
 
@@ -90,23 +89,54 @@ enum SteamTimeline {
             self.init(data: data)
         }
 
-        /// Steam writes numbers as strings ("429813"). Game-added events are
-        /// read leniently: whichever of title/name/description is present.
+        /// A game state held for less than this ("Loading...") is not a chapter.
+        static let minimumStateLength: Double = 5_000
+
+        /// Steam writes numbers as strings ("429813"). Entry types, as seen in
+        /// Left 4 Dead 2 and Half-Life 2 timelines:
+        ///
+        ///   event              a game's marker: title, optional description
+        ///   screenshot         a screenshot taken in the session
+        ///   state_description  what the game is doing ("Dead Center - 1: Hotel",
+        ///                      "Loading..."), in effect until the next one
+        ///   gamemode, phase    playing/menus flags and chapter ranges; the
+        ///                      games also add an event for each chapter
+        ///   error              Steam's own failures ("#GameRecording_RecordingFailed")
         init?(data: Data) {
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
             start = Self.number(json["starttime"]) ?? 0
-            entries = (json["entries"] as? [[String: Any]] ?? []).compactMap { raw in
-                let type = raw["type"] as? String ?? ""
-                // Steam's own failures ("#GameRecording_RecordingFailed") are
-                // not moments anyone wants to jump to.
-                guard type != "error",
-                      let time = Self.number(raw["time"]),
-                      let text = ["title", "name", "description"].lazy
-                        .compactMap({ raw[$0] as? String }).first(where: { !$0.isEmpty })
-                else { return nil }
-                return Entry(time: time, duration: Self.number(raw["duration"]), type: type,
-                             title: SteamTimeline.readable(text))
+            let end = Self.number(json["endtime"]) ?? .infinity
+            let raw = (json["entries"] as? [[String: Any]] ?? [])
+                .compactMap { entry in Self.number(entry["time"]).map { (time: $0, entry: entry) } }
+                .sorted { $0.time < $1.time }
+
+            var entries: [Entry] = []
+            var lastState: String?
+            for (i, (time, entry)) in raw.enumerated() {
+                switch entry["type"] as? String ?? "" {
+                case "error", "gamemode", "phase":
+                    continue
+                case "screenshot":
+                    entries.append(Entry(time: time, duration: nil, title: "Screenshot"))
+                case "state_description":
+                    guard let state = Self.text(entry["title"]), state != lastState else { continue }
+                    let next = raw[(i + 1)...].first { $0.entry["type"] as? String == "state_description" }?.time ?? end
+                    guard next - time >= Self.minimumStateLength else { continue }
+                    lastState = state
+                    // Half-Life 2 names each chapter in an event a second
+                    // before the state: "New Chapter: POINT INSERTION".
+                    if let previous = entries.last, time - previous.time < Self.minimumStateLength,
+                       previous.title.localizedCaseInsensitiveContains(state) { continue }
+                    entries.append(Entry(time: time, duration: nil, title: state))
+                default:
+                    // "Achievement Progress: Lambda Locator (1/45)"
+                    let parts = [entry["title"], entry["description"]].compactMap(Self.text)
+                    guard !parts.isEmpty else { continue }
+                    entries.append(Entry(time: time, duration: Self.number(entry["duration"]),
+                                         title: parts.joined(separator: ": ")))
+                }
             }
+            self.entries = entries
         }
 
         private static func number(_ value: Any?) -> Double? {
@@ -115,6 +145,14 @@ enum SteamTimeline {
             case let s as String: return Double(s)
             default: return nil
             }
+        }
+
+        /// Readable single-line text, or nil if there is none. Games pad their
+        /// strings ("Rise and shine. "), and chapter titles are one line.
+        private static func text(_ value: Any?) -> String? {
+            guard let string = value as? String else { return nil }
+            let words = string.split(whereSeparator: \.isWhitespace)
+            return words.isEmpty ? nil : SteamTimeline.readable(words.joined(separator: " "))
         }
     }
 
