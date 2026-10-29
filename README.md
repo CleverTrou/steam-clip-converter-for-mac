@@ -241,7 +241,7 @@ Sources/SteamClipConverter/
 
 ## AVFoundation notes
 
-Three things cost real debugging time and are easy to hit again:
+Five things cost real debugging time and are easy to hit again:
 
 1. **`AVAssetTrack` does not retain its `AVAsset`.** Creating an asset inline
    inside an `if let` lets it deallocate while the track is still in use; every
