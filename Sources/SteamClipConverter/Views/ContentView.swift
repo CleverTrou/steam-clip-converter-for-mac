@@ -254,6 +254,14 @@ struct ContentView: View {
         ToolbarItem(placement: .primaryAction) {
             Button { model.reload() } label: { Label("Refresh", systemImage: "arrow.clockwise") }
         }
+        ToolbarItem(placement: .primaryAction) {
+            Button { model.chooseVideoFiles() } label: {
+                Label("Convert Video Files…", systemImage: "film.stack")
+            }
+            .help("Convert video files that aren't Steam recordings, such as OBS captures (.mkv), "
+                  + "with the format, 3D layout and destination chosen below.")
+            .disabled(model.isConverting)
+        }
     }
 
     // MARK: - Export bar
@@ -285,6 +293,22 @@ struct ContentView: View {
                         .help(model.container.keepsAllMetadata
                               ? "QuickTime keeps all 12 metadata fields, including the Steam-specific ones, and adds chapters for Steam timeline events."
                               : "MPEG-4 is more portable for sharing, but drops the Steam-specific metadata and timeline chapters.")
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("3D layout")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                        Picker("3D layout", selection: $model.stereoChoice) {
+                            ForEach(StereoChoice.allCases) { Text($0.label).tag($0) }
+                        }
+                        .labelsHidden()
+                        .frame(width: 170)
+                        .help("3D output keeps the side-by-side picture and tags it so YouTube plays it in 3D, "
+                              + "including in its Vision Pro and Quest apps, and adds .3D.HSBS to the name for "
+                              + "players that go by name. Detect from file reads that tag, or an .mkv's own "
+                              + "3D flag; Steam clips carry neither, so they convert as 2D unless you choose 3D.")
                     }
 
                     VStack(alignment: .leading, spacing: 3) {

@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Convert Video Files…** (toolbar, or ⇧⌘O) converts video files that aren't
+  Steam recordings, including OBS recordings (`.mkv`), which no Mac app opens.
+  Streams are copied, not re-encoded: a 9-minute 1080p60 OBS recording takes
+  about 2 seconds. A recording cut off mid-write converts up to its last whole
+  frame.
+- A **3D layout** setting for games recorded in side-by-side 3D (for example
+  with ReShade's SuperDepth3D). 3D exports carry the stereo tag YouTube looks
+  for, so the upload plays in 3D, including in YouTube's Apple Vision Pro and
+  Meta Quest apps. They also end in `.3D.HSBS`, which headset video players
+  recognise. "Detect from file" reads that tag from file names, such as the
+  airGPU toolkit's 3D captures, and from an `.mkv`'s own 3D flag.
+
 ## [1.1.0] - 2026-09-30
 
 ### Added

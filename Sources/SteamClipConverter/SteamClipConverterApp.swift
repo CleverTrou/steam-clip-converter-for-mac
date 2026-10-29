@@ -18,6 +18,9 @@ struct SteamClipConverterApp: App {
                     .keyboardShortcut("o", modifiers: .command)
                 Button("Refresh") { model.reload() }
                     .keyboardShortcut("r", modifiers: .command)
+                Button("Convert Video Files…") { model.chooseVideoFiles() }
+                    .keyboardShortcut("o", modifiers: [.command, .shift])
+                    .disabled(model.isConverting)
             }
         }
     }

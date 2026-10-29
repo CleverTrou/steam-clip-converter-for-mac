@@ -96,6 +96,9 @@ tagging propagates through probing, thumbnails, scrubbing and export alike.
   them on each clip's thumbnail. See [Timeline chapters](#timeline-chapters).
 - **Marks what's already converted** and leaves it in place, including files
   produced by other tools (matched on capture timestamp).
+- **Converts other video files too**, such as OBS recordings (`.mkv`), and
+  **tags side-by-side 3D** so YouTube plays it in 3D. See
+  [3D and other video files](#3d-and-other-video-files).
 
 ## Container choice
 
@@ -139,6 +142,39 @@ exports have no chapters.
 Chapters don't touch the video or audio. A clip with events is written with an
 `AVAssetWriter` passthrough instead of an export session, and its audio and
 video bitstreams are byte-identical to an export without chapters.
+
+## 3D and other video files
+
+**Convert Video Files…** (toolbar, or ⇧⌘O) converts files that aren't Steam
+recordings. It uses the same format, destination and 3D setting as the
+clips, and copies the streams without re-encoding.
+
+- **`.mkv`**, which is what OBS records by default. No Apple framework reads
+  Matroska, so the app reads it itself. It handles what OBS writes: H.264
+  or HEVC video, AAC audio, and recordings cut off mid-write, which are read
+  up to their last whole frame. A 9-minute 1080p60 OBS capture converts in
+  about 2 seconds.
+- **`.mp4`, `.mov`, `.m4v`**, through AVFoundation as usual.
+
+**3D.** A game shown in side-by-side 3D, for example through ReShade's
+SuperDepth3D, records as one frame holding both eyes. Choose **3D
+side-by-side** (or top-and-bottom) under **3D layout**, and the export:
+
+- carries the `st3d` stereo box that YouTube's
+  [Upload 3D videos](https://support.google.com/youtube/answer/7278886) page
+  asks for, so YouTube plays it in 3D. That includes its Apple Vision Pro and
+  Meta Quest apps, once YouTube has finished processing the upload.
+- ends in `.3D.HSBS` (or `.3D.HTAB`), Kodi's naming convention, which most
+  headset video players use to recognise 3D.
+
+**Detect from file** reads that same tag from the source's name, which is
+how the [airGPU toolkit](https://github.com/CleverTrou/airgpu-toolkit) names
+its 3D captures, or an `.mkv`'s own 3D flag. Steam clips carry neither, so
+they convert as 2D unless you pick a layout.
+
+Apple's spatial video format (MV-HEVC), which Vimeo and the Vision Pro's own
+apps need, isn't produced yet. VideoToolbox only encodes it on Apple silicon,
+and it means re-encoding rather than copying.
 
 ## App icon
 
@@ -198,6 +234,8 @@ Sources/SteamClipConverter/
   Model/  Clip · ClipScanner (+MPD parser) · SteamLibrary · SteamTimeline
           ConversionLedger · SupportDirectory · AppModel
   Media/  DashAssembler · MediaProbe · ClipConverter · ChapterWriter
+          MatroskaFile · MatroskaRemuxer · VideoFileConverter
+          StereoLayout · StereoTagger
   Views/  ContentView · ClipCard
 ```
 
@@ -213,6 +251,13 @@ Three things cost real debugging time and are easy to hit again:
    the export with the same unexplained error.
 3. **Fragmented MP4 needs `AVURLAssetPreferPreciseDurationAndTimingKey`,** or the
    duration is approximate and composition inserts can misbehave.
+4. **An AAC magic cookie must be a full ES descriptor.** `AVAssetWriter` copies
+   the cookie verbatim into the `esds` box. Matroska stores only the bare
+   AudioSpecificConfig, and writing that produces an audio track AVFoundation
+   can't see at all, although ffprobe reads it fine.
+5. **A `.mov` sample description ends in a 4-byte zero terminator.** A box
+   appended after it is invisible to every parser, so `st3d` goes after the
+   last real child box instead.
 
 ## Safety and privacy
 

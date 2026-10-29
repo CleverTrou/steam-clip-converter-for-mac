@@ -13,6 +13,7 @@ let package = Package(
         .testTarget(
             name: "SteamClipConverterTests",
             dependencies: ["SteamClipConverter"],
+            resources: [.copy("Fixtures")],
             swiftSettings: [.swiftLanguageMode(.v5)]
         )
     ]
