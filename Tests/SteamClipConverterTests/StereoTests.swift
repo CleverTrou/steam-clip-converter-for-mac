@@ -36,7 +36,8 @@ final class StereoLayoutTests: XCTestCase {
         // A different time zone's stamp, so only the name match can find it.
         TimeZone.ReferenceType.default = TimeZone(identifier: "Pacific/Kiritimati")!
         defer { TimeZone.ReferenceType.default = TimeZone.current }
-        let output = folder.appending(path: "\(StereoLayout.sideBySide.outputStem(for: clip.outputStem)).mov")
+        // A repeat export, numbered by uniqueDestination, after the first was deleted.
+        let output = folder.appending(path: "\(StereoLayout.sideBySide.outputStem(for: clip.outputStem)) (2).mov")
         FileManager.default.createFile(atPath: output.path, contents: Data())
         var records: [String: ConversionRecord] = [:]
         ConversionStore.adopt(clips: [clip], outputFolder: folder, into: &records)
