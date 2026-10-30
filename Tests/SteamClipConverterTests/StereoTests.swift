@@ -12,6 +12,9 @@ final class StereoLayoutTests: XCTestCase {
         // Words that only look like tags stay put.
         XCTAssertEqual(StereoLayout.sideBySide.outputStem(for: "Super Mario 3D"), "Super Mario 3D.3D.HSBS")
         XCTAssertEqual(StereoLayout.stripTags(from: "Game - Tab"), "Game - Tab")
+        // Only the real tag goes, not title words just before it.
+        XCTAssertEqual(StereoLayout.stripTags(from: "Super Mario 3D.3D.HSBS"), "Super Mario 3D")
+        XCTAssertEqual(StereoLayout.stripTags(from: "Game - Tab.3D.HSBS"), "Game - Tab")
     }
 
     func testTagsAreReadAsWholeTokensOnly() {

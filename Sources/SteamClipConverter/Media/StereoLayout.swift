@@ -61,10 +61,11 @@ enum StereoLayout: String, CaseIterable, Identifiable {
 
     /// The file name stem with any 3D tokens this type recognises removed, so
     /// re-tagging "x.3D.HSBS" gives "x.3D.HSBS", not "x.3D.HSBS.3D.HSBS".
-    /// Only a trailing group that `detect` itself reads as 3D is removed, so
-    /// "Super Mario 3D" and "Game - Tab" keep their last word.
+    /// Exactly one trailing tag - a layout token with an optional "3D" before
+    /// it - and only if `detect` reads it as 3D. So "Super Mario 3D" and
+    /// "Game - Tab" keep their last word, and so does "Super Mario 3D.3D.HSBS".
     static func stripTags(from stem: String) -> String {
-        let pattern = #"(?i)([. _-](3d|h?sbs|fsbs|h?tab|ftab|hou))+$"#
+        let pattern = #"(?i)[. _-](3d[. _-])?(h?sbs|fsbs|h?tab|ftab|hou)$"#
         guard let range = stem.range(of: pattern, options: .regularExpression),
               detect(fromFileName: String(stem[range]) + ".x") != nil else { return stem }
         return String(stem[..<range.lowerBound])
