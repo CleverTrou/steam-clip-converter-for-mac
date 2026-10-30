@@ -1,5 +1,4 @@
 import AppKit
-import UniformTypeIdentifiers
 import Observation
 import SwiftUI
 
@@ -22,10 +21,10 @@ final class AppModel {
     var outputFolder: URL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask)[0]
         .appending(path: "Steam Recordings")
     var container: ClipConverter.Container = .mov
-    /// 3D layout of what is being converted. Steam records no such hint, so
-    /// "Detect from file" means 2D for Steam clips; video files declare it in
-    /// their name or, for .mkv, in Matroska's StereoMode.
-    var stereoChoice: StereoChoice = .automatic
+    /// How the clips being converted were recorded. Steam records whatever the
+    /// game shows and keeps no note of it, so this is the user's to say: 3D
+    /// adds the stereo tag YouTube reads and a ".3D.HSBS"-style name.
+    var stereoLayout: StereoLayout = .flat
     var isConverting = false
     /// clip.id -> where its converted file landed. Persisted across launches.
     var conversions: [String: ConversionRecord] = ConversionStore.load()
@@ -214,7 +213,7 @@ final class AppModel {
         lastResult = nil
         let folder = outputFolder
         let container = self.container
-        let stereo = stereoChoice.resolve(detected: nil)
+        let stereo = stereoLayout
 
         Task {
             var succeeded = 0
@@ -249,66 +248,6 @@ final class AppModel {
             lastResult = result
             // The result appears in the export bar without taking focus, so a
             // VoiceOver user would otherwise never hear that the batch finished.
-            AccessibilityNotification.Announcement(result).post()
-        }
-    }
-
-    // MARK: - Other video files
-
-    /// Picks video files that aren't Steam recordings -- OBS captures, for one
-    /// -- and converts them with the same container, destination and 3D
-    /// settings as the clips.
-    func chooseVideoFiles() {
-        guard !isConverting else { return }
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = VideoFileConverter.fileExtensions.compactMap { UTType(filenameExtension: $0) }
-        panel.prompt = "Convert"
-        panel.message = "Choose video files to convert, such as OBS recordings (.mkv). "
-            + "Files named with .3D.HSBS or SBS are converted as 3D when the 3D layout is Detect from file."
-        if panel.runModal() == .OK { convertVideoFiles(panel.urls) }
-    }
-
-    func convertVideoFiles(_ files: [URL]) {
-        guard !files.isEmpty, !isConverting else { return }
-        isConverting = true
-        lastResult = nil
-        let folder = outputFolder
-        let container = self.container
-        let stereo = stereoChoice
-
-        Task {
-            var succeeded = 0
-            var threeD = 0
-            var totalBytes: Int64 = 0
-            var problems: [String] = []
-            for (index, file) in files.enumerated() {
-                conversionLabel = "Converting \(index + 1) of \(files.count): \(file.lastPathComponent)"
-                conversionProgress = 0
-                do {
-                    let output = try await VideoFileConverter.convert(file: file, to: folder, container: container,
-                                                                      stereo: stereo) { value in
-                        Task { @MainActor in self.conversionProgress = value }
-                    }
-                    succeeded += 1
-                    if output.layout != .flat { threeD += 1 }
-                    totalBytes += output.bytes
-                    if let note = output.note { problems.append(note) }
-                } catch {
-                    problems.append("\(file.lastPathComponent): \(error.localizedDescription)")
-                }
-            }
-            isConverting = false
-            conversionLabel = ""
-            conversionProgress = 0
-            let size = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
-            var result = "Converted \(succeeded) of \(files.count) file\(files.count == 1 ? "" : "s") (\(size))"
-            if threeD > 0 { result += ", \(threeD) as 3D" }
-            result += " to \(folder.lastPathComponent)."
-            if !problems.isEmpty { result += " " + problems.joined(separator: "; ") }
-            lastResult = result
             AccessibilityNotification.Announcement(result).post()
         }
     }

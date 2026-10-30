@@ -1,8 +1,9 @@
 import Foundation
 
-/// How a recording packs two eyes into one frame. Only the packing a player
-/// can split is modelled: left eye first, each eye squeezed to half the frame,
-/// which is what ReShade's SuperDepth3D and most "3D SBS" game modes produce.
+/// How a Steam recording packs two eyes into one frame. Steam records what the
+/// game shows, so a game run in side-by-side 3D (ReShade's SuperDepth3D, or a
+/// game's own 3D mode) makes a side-by-side clip. Only the packing a player
+/// can split is modelled: left eye first, each eye squeezed to half the frame.
 enum StereoLayout: String, CaseIterable, Identifiable {
     case flat
     case sideBySide
@@ -20,9 +21,8 @@ enum StereoLayout: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Kodi's filename convention for half-resolution 3D, also written by the
-    /// airGPU toolkit's recorder. Players that don't read `st3d` (most Quest
-    /// video players, Kodi itself) go by the name instead.
+    /// Kodi's filename convention for half-resolution 3D. Players that don't
+    /// read `st3d` (most Quest video players, Kodi itself) go by the name.
     var fileTag: String? {
         switch self {
         case .flat: return nil
@@ -39,11 +39,13 @@ enum StereoLayout: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Reads the layout from a file name's tokens, e.g. "Game.3D.HSBS.mkv",
-    /// "clip_SBS.mp4" or "movie.3D.HOU.mkv" (bare "OU" is too common a word
-    /// to count, and bare "TAB" counts only with "3D"). Tokens are separated by
-    /// `. _ - ` or a space, as in Kodi's own matching, so "SBS" inside a word
-    /// never counts. Returns nil when the name says nothing about 3D.
+    /// Reads a 3D layout from a file name's tokens, e.g. "Game.3D.HSBS.mov" or
+    /// "clip_SBS.mp4". Steam's own folder names carry none; this is how
+    /// `stripTags`, and so the converted-file check, recognise exported names.
+    /// Tokens are separated by `. _ - ` or a space, as in Kodi's matching, so
+    /// "SBS" inside a word never counts; a bare "OU" never counts and a bare
+    /// "TAB" only next to "3D", as both are ordinary words. Returns nil when
+    /// the name says nothing about 3D.
     static func detect(fromFileName name: String) -> StereoLayout? {
         let stem = (name as NSString).deletingPathExtension
         let tokens = Set(stem.lowercased()
@@ -59,45 +61,18 @@ enum StereoLayout: String, CaseIterable, Identifiable {
 
     /// The file name stem with any 3D tokens this type recognises removed, so
     /// re-tagging "x.3D.HSBS" gives "x.3D.HSBS", not "x.3D.HSBS.3D.HSBS".
+    /// Only a trailing group that `detect` itself reads as 3D is removed, so
+    /// "Super Mario 3D" and "Game - Tab" keep their last word.
     static func stripTags(from stem: String) -> String {
         let pattern = #"(?i)([. _-](3d|h?sbs|fsbs|h?tab|ftab|hou))+$"#
-        return stem.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+        guard let range = stem.range(of: pattern, options: .regularExpression),
+              detect(fromFileName: String(stem[range]) + ".x") != nil else { return stem }
+        return String(stem[..<range.lowerBound])
     }
 
     /// The name for an output in this layout: "<stem>.3D.HSBS" or "<stem>".
     func outputStem(for stem: String) -> String {
         guard let tag = fileTag else { return stem }
         return "\(Self.stripTags(from: stem)).\(tag)"
-    }
-}
-
-/// The user's choice in the export bar. `automatic` reads the layout from the
-/// file (its name, or Matroska's StereoMode) and treats Steam clips as 2D,
-/// since Steam records no such hint.
-enum StereoChoice: String, CaseIterable, Identifiable {
-    case automatic
-    case flat
-    case sideBySide
-    case topBottom
-
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .automatic: return "Detect from file"
-        case .flat: return StereoLayout.flat.label
-        case .sideBySide: return StereoLayout.sideBySide.label
-        case .topBottom: return StereoLayout.topBottom.label
-        }
-    }
-
-    /// The layout to write, given what the file itself says (nil = nothing).
-    func resolve(detected: StereoLayout?) -> StereoLayout {
-        switch self {
-        case .automatic: return detected ?? .flat
-        case .flat: return .flat
-        case .sideBySide: return .sideBySide
-        case .topBottom: return .topBottom
-        }
     }
 }

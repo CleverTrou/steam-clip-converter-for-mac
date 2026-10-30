@@ -254,14 +254,6 @@ struct ContentView: View {
         ToolbarItem(placement: .primaryAction) {
             Button { model.reload() } label: { Label("Refresh", systemImage: "arrow.clockwise") }
         }
-        ToolbarItem(placement: .primaryAction) {
-            Button { model.chooseVideoFiles() } label: {
-                Label("Convert Video Files…", systemImage: "film.stack")
-            }
-            .help("Convert video files that aren't Steam recordings, such as OBS captures (.mkv), "
-                  + "with the format, 3D layout and destination chosen below.")
-            .disabled(model.isConverting)
-        }
     }
 
     // MARK: - Export bar
@@ -300,15 +292,15 @@ struct ContentView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .accessibilityHidden(true)
-                        Picker("3D layout", selection: $model.stereoChoice) {
-                            ForEach(StereoChoice.allCases) { Text($0.label).tag($0) }
+                        Picker("3D layout", selection: $model.stereoLayout) {
+                            ForEach(StereoLayout.allCases) { Text($0.label).tag($0) }
                         }
                         .labelsHidden()
                         .frame(width: 170)
-                        .help("3D output keeps the side-by-side picture and tags it so YouTube plays it in 3D, "
-                              + "including in its Vision Pro and Quest apps, and adds .3D.HSBS to the name for "
-                              + "players that go by name. Detect from file reads that tag, or an .mkv's own "
-                              + "3D flag; Steam clips carry neither, so they convert as 2D unless you choose 3D.")
+                        .help("For a game recorded in 3D, such as one shown side-by-side through ReShade. "
+                              + "3D output keeps the picture as it is and tags it so YouTube plays it in 3D, "
+                              + "including in its Vision Pro and Quest apps, and adds .3D.HSBS to the name "
+                              + "for players that go by name. Steam doesn't record whether a game was in 3D.")
                     }
 
                     VStack(alignment: .leading, spacing: 3) {
