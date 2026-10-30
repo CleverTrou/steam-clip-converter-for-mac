@@ -45,8 +45,11 @@ enum ConversionStore {
         guard !existing.isEmpty else { return }
 
         for clip in clips where records[clip.id] == nil {
-            // Exact name first -- anything this app produced.
-            var match = existing.first { $0.deletingPathExtension().lastPathComponent == clip.outputStem }
+            // Exact name first -- anything this app produced, including 3D
+            // exports, which add ".3D.HSBS" or ".3D.HTAB" to the same stem.
+            var match = existing.first {
+                StereoLayout.stripTags(from: $0.deletingPathExtension().lastPathComponent) == clip.outputStem
+            }
 
             // Then a timestamp match, so exports made by other tools (or earlier
             // naming schemes) are recognised too. Every Steam recording carries a

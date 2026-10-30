@@ -13,6 +13,29 @@ final class StereoLayoutTests: XCTestCase {
         // Inside a word, or a bare "OU", is not a tag.
         XCTAssertNil(StereoLayout.detect(fromFileName: "Gatsbsy.mkv"))
         XCTAssertNil(StereoLayout.detect(fromFileName: "Ou est la gare.mkv"))
+        // A bare "tab" is a word unless the name also says 3D.
+        XCTAssertNil(StereoLayout.detect(fromFileName: "Game - Tab menu tutorial.mkv"))
+        XCTAssertNil(StereoLayout.detect(fromFileName: "Browser_tab.mp4"))
+        XCTAssertEqual(StereoLayout.detect(fromFileName: "movie.3D.TAB.mkv"), .topBottom)
+    }
+
+    func testA3DExportOfAClipIsRecognisedAsConverted() throws {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "scc-adopt-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let clip = Clip(id: "bg_550_20260927_201500", url: folder, appID: "550",
+                        recordedAt: Clip.folderDateFormatter.date(from: "20260927_201500"), kind: .background,
+                        duration: 30, segmentDuration: 3, videoSegmentCount: 10, byteSize: 0,
+                        probe: nil, gameName: "Left 4 Dead 2")
+        // A different time zone's stamp, so only the name match can find it.
+        TimeZone.ReferenceType.default = TimeZone(identifier: "Pacific/Kiritimati")!
+        defer { TimeZone.ReferenceType.default = TimeZone.current }
+        let output = folder.appending(path: "\(StereoLayout.sideBySide.outputStem(for: clip.outputStem)).mov")
+        FileManager.default.createFile(atPath: output.path, contents: Data())
+        var records: [String: ConversionRecord] = [:]
+        ConversionStore.adopt(clips: [clip], outputFolder: folder, into: &records)
+        XCTAssertEqual(records[clip.id].map { URL(fileURLWithPath: $0.outputPath).resolvingSymlinksInPath() },
+                       output.resolvingSymlinksInPath())
     }
 
     func testOutputNamesCarryExactlyOneTag() {

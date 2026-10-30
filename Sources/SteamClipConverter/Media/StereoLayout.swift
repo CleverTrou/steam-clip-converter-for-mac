@@ -41,7 +41,7 @@ enum StereoLayout: String, CaseIterable, Identifiable {
 
     /// Reads the layout from a file name's tokens, e.g. "Game.3D.HSBS.mkv",
     /// "clip_SBS.mp4" or "movie.3D.HOU.mkv" (bare "OU" is too common a word
-    /// to count). Tokens are separated by
+    /// to count, and bare "TAB" counts only with "3D"). Tokens are separated by
     /// `. _ - ` or a space, as in Kodi's own matching, so "SBS" inside a word
     /// never counts. Returns nil when the name says nothing about 3D.
     static func detect(fromFileName name: String) -> StereoLayout? {
@@ -50,7 +50,10 @@ enum StereoLayout: String, CaseIterable, Identifiable {
             .split(whereSeparator: { ".-_ ".contains($0) })
             .map(String.init))
         if !tokens.isDisjoint(with: ["sbs", "hsbs", "fsbs"]) { return .sideBySide }
-        if !tokens.isDisjoint(with: ["tab", "htab", "ftab", "hou"]) { return .topBottom }
+        if !tokens.isDisjoint(with: ["htab", "ftab", "hou"]) { return .topBottom }
+        // "Tab" is an ordinary word ("Tab menu tutorial"), so on its own it
+        // only counts next to an explicit 3D.
+        if tokens.contains("tab"), tokens.contains("3d") { return .topBottom }
         return nil
     }
 
