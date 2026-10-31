@@ -18,6 +18,10 @@ Six clips laid out exactly like Steam's (`video/bg_<appid>_<date>_<time>/` with
 and AAC audio. The visuals are ffmpeg test sources: fractals, Game of Life,
 Rule 110 and gradients. Needs ffmpeg with `hevc_videotoolbox`.
 
+Three of the clips also get a Steam timeline (`timelines/<id>.json`, indexed
+by `gamerecording.pb`), so their cards show event ticks and a "timeline
+events" line.
+
 ## 2. App state
 
 The app reads game names and the converted list from
