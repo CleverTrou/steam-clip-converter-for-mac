@@ -30,7 +30,7 @@ enum AboutPanel {
         }
 
         let credits = NSMutableAttributedString()
-        credits.append(text("Converts Steam Game Recording clips into movies QuickTime, Photos and Final Cut open. "
+        credits.append(text("Converts Steam Game Recording clips into files QuickTime, Photos, Final Cut and Premiere will actually open. "
                             + "No ffmpeg: the whole pipeline is AVFoundation.\n"))
         credits.append(text("Source code on GitHub\n", color: .linkColor, link: repository))
         credits.append(text("Steam is a trademark of Valve Corporation. This app is not affiliated with or endorsed by Valve.",
