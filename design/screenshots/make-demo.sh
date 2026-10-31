@@ -7,9 +7,12 @@ set -euo pipefail
 ROOT="${1:?root}"
 
 # Refuse a real library: the gamerecording.pb written below replaces Steam's.
-if [ -d "$ROOT" ] && [ -n "$(ls -A "$ROOT")" ]; then
-    echo "$ROOT isn't empty; use a new or empty folder." >&2
-    exit 1
+if [ -d "$ROOT" ]; then
+    contents=$(ls -A "$ROOT")   # a plain assignment, so set -e stops on an unreadable folder
+    if [ -n "$contents" ]; then
+        echo "$ROOT isn't empty; use a new or empty folder." >&2
+        exit 1
+    fi
 fi
 mkdir -p "$ROOT/video"
 
@@ -84,6 +87,6 @@ for folder, offset, length, events in sessions:
     index += field(1, field(1, timeline_id) + field(2, int(appid)) + field(3, start) + field(4, end) + field(5, recording))
     print(f"{timeline_id:40} {len(events)} events -> {folder}")
 
-with open(f"{root}/gamerecording.pb", "wb") as f:
+with open(f"{root}/gamerecording.pb", "xb") as f:  # never replace one that appeared meanwhile
     f.write(index)
 PY
