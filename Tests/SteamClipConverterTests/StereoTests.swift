@@ -133,7 +133,10 @@ final class SteamStereoConversionTests: XCTestCase {
         let faststart = folder.appending(path: "faststart.mp4")
         try await session.export(to: faststart, as: .mp4)
         let data = try Data(contentsOf: faststart)
-        XCTAssertTrue(StereoTagger.children(of: 0..<data.count, in: data).prefix(3).contains { $0.type == "moov" })
+        // moov before mdat, or tagging wouldn't need to move a single offset.
+        let types = StereoTagger.children(of: 0..<data.count, in: data).map(\.type)
+        let moov = try XCTUnwrap(types.firstIndex(of: "moov")), mdat = try XCTUnwrap(types.firstIndex(of: "mdat"))
+        XCTAssertLessThan(moov, mdat)
 
         try StereoTagger.tag(faststart, layout: .topBottom)
         XCTAssertEqual(try StereoTagger.readMode(faststart), 1)
