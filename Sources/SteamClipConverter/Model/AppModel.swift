@@ -21,6 +21,10 @@ final class AppModel {
     var outputFolder: URL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask)[0]
         .appending(path: "Steam Recordings")
     var container: ClipConverter.Container = .mov
+    /// How the clips being converted were recorded. Steam records whatever the
+    /// game shows and keeps no note of it, so this is the user's to say: 3D
+    /// adds the stereo tag YouTube reads and a ".3D.HSBS"-style name.
+    var stereoLayout: StereoLayout = .flat
     var isConverting = false
     /// clip.id -> where its converted file landed. Persisted across launches.
     var conversions: [String: ConversionRecord] = ConversionStore.load()
@@ -209,6 +213,7 @@ final class AppModel {
         lastResult = nil
         let folder = outputFolder
         let container = self.container
+        let stereo = stereoLayout
 
         Task {
             var succeeded = 0
@@ -218,7 +223,8 @@ final class AppModel {
                 conversionLabel = "Converting \(index + 1) of \(targets.count): \(clip.displayName)"
                 conversionProgress = 0
                 do {
-                    let output = try await ClipConverter.convert(clip: clip, to: folder, container: container) { value in
+                    let output = try await ClipConverter.convert(clip: clip, to: folder, container: container,
+                                                                 stereo: stereo) { value in
                         Task { @MainActor in self.conversionProgress = value }
                     }
                     succeeded += 1
@@ -226,7 +232,7 @@ final class AppModel {
                     conversions[clip.id] = ConversionRecord(clipID: clip.id,
                                                            outputPath: output.url.path,
                                                            convertedAt: Date(),
-                                                           format: container.ext.uppercased())
+                                                           format: container.ext.uppercased() + (stereo == .flat ? "" : " 3D"))
                     ConversionStore.save(conversions)
                 } catch {
                     failures.append("\(clip.id): \(error.localizedDescription)")

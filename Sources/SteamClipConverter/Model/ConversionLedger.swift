@@ -45,8 +45,15 @@ enum ConversionStore {
         guard !existing.isEmpty else { return }
 
         for clip in clips where records[clip.id] == nil {
-            // Exact name first -- anything this app produced.
-            var match = existing.first { $0.deletingPathExtension().lastPathComponent == clip.outputStem }
+            // Exact name first -- anything this app produced, including 3D
+            // exports, which add ".3D.HSBS" or ".3D.HTAB" to the same stem.
+            // The " (2)" that uniqueDestination adds for a repeat export comes
+            // off first, since it sits after the tag.
+            var match = existing.first {
+                let stem = $0.deletingPathExtension().lastPathComponent
+                    .replacingOccurrences(of: #" \(\d+\)$"#, with: "", options: .regularExpression)
+                return StereoLayout.stripTags(from: stem) == clip.outputStem
+            }
 
             // Then a timestamp match, so exports made by other tools (or earlier
             // naming schemes) are recognised too. Every Steam recording carries a

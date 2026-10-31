@@ -288,6 +288,23 @@ struct ContentView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 3) {
+                        Text("3D layout")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                        Picker("3D layout", selection: $model.stereoLayout) {
+                            ForEach(StereoLayout.allCases) { Text($0.label).tag($0) }
+                        }
+                        .labelsHidden()
+                        .frame(width: 170)
+                        .help("For a game recorded in 3D, such as one shown side-by-side through ReShade. "
+                              + "3D output keeps the picture as it is, tags it, and adds .3D.HSBS or .3D.HTAB "
+                              + "to the name for players that go by name. YouTube's help documents 3D "
+                              + "playback for side-by-side uploads and names no other layout. Steam doesn't "
+                              + "record whether a game was in 3D.")
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
                         Text("Converted file destination")
                             .font(.caption)
                             .foregroundStyle(.secondary)

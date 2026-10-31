@@ -45,9 +45,36 @@ enum ClipConverter {
         var seconds: Double
     }
 
+    /// `folder/stem.ext`, or `folder/stem (2).ext` and so on if that exists.
+    static func uniqueDestination(in folder: URL, stem: String, ext: String) -> URL {
+        var destination = folder.appending(path: "\(stem).\(ext)")
+        var suffix = 2
+        while FileManager.default.fileExists(atPath: destination.path) {
+            destination = folder.appending(path: "\(stem) (\(suffix)).\(ext)")
+            suffix += 1
+        }
+        return destination
+    }
+
+    /// Adds the 3D tag. A 3D clip without it would play, and upload, as two
+    /// squashed copies, so a failed tag fails the conversion rather than
+    /// leaving that file behind.
+    static func tagOrDiscard(_ url: URL, stereo: StereoLayout) throws {
+        do {
+            try StereoTagger.tag(url, layout: stereo)
+        } catch {
+            try? FileManager.default.removeItem(at: url)
+            throw error
+        }
+    }
+
+    /// `stereo` is the layout the clip was recorded in. Steam records no
+    /// such hint, so it comes from the export bar; 3D adds the `st3d` tag and
+    /// a ".3D.HSBS"-style suffix to the name.
     static func convert(clip: Clip,
                         to folder: URL,
                         container: Container,
+                        stereo: StereoLayout = .flat,
                         progress: @escaping @Sendable (Double) -> Void) async throws -> Output {
         let started = Date()
         let scratch = DashAssembler.scratchDirectory()
@@ -88,12 +115,7 @@ enum ClipConverter {
         progress(0.3)
 
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        var destination = folder.appending(path: "\(clip.outputStem).\(container.ext)")
-        var suffix = 2
-        while FileManager.default.fileExists(atPath: destination.path) {
-            destination = folder.appending(path: "\(clip.outputStem) (\(suffix)).\(container.ext)")
-            suffix += 1
-        }
+        let destination = uniqueDestination(in: folder, stem: stereo.outputStem(for: clip.outputStem), ext: container.ext)
 
         // An export session can't add tracks, so a clip with timeline events
         // is rewritten sample by sample with a chapter track alongside.
@@ -105,6 +127,7 @@ enum ClipConverter {
                                           to: destination, fileType: container.fileType) { value in
                 progress(0.3 + value * 0.7)
             }
+            try tagOrDiscard(destination, stereo: stereo)
             progress(1.0)
             let bytes = (try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? Int64) ?? 0
             return Output(url: destination, bytes: bytes, seconds: Date().timeIntervalSince(started))
@@ -124,6 +147,7 @@ enum ClipConverter {
         defer { poll.cancel() }
 
         try await session.export(to: destination, as: container.fileType)
+        try tagOrDiscard(destination, stereo: stereo)
         progress(1.0)
 
         let bytes = (try? FileManager.default.attributesOfItem(atPath: destination.path)[.size] as? Int64) ?? 0

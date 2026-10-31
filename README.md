@@ -96,6 +96,8 @@ tagging propagates through probing, thumbnails, scrubbing and export alike.
   them on each clip's thumbnail. See [Timeline chapters](#timeline-chapters).
 - **Marks what's already converted** and leaves it in place, including files
   produced by other tools (matched on capture timestamp).
+- **Tags clips recorded in 3D** with the stereo tag YouTube reads. See
+  [3D recordings](#3d-recordings).
 
 ## Container choice
 
@@ -139,6 +141,33 @@ exports have no chapters.
 Chapters don't touch the video or audio. A clip with events is written with an
 `AVAssetWriter` passthrough instead of an export session, and its audio and
 video bitstreams are byte-identical to an export without chapters.
+
+## 3D recordings
+
+Steam records whatever the game shows. A game shown in side-by-side 3D, for
+example through ReShade's SuperDepth3D, records as one frame holding both
+eyes. Steam keeps no note of that, so choose the layout under **3D layout**
+before converting. A 3D export:
+
+- carries the `st3d` stereo box that YouTube's
+  [Upload 3D videos](https://support.google.com/youtube/answer/7278886) page
+  asks for. That page documents 3D playback for side-by-side uploads, once
+  YouTube has finished processing them. Playback in YouTube's Apple Vision
+  Pro and Meta Quest apps hasn't been tried yet. The page names only
+  side-by-side, so top-and-bottom output is tagged correctly but isn't known
+  to play in 3D on YouTube.
+- ends in `.3D.HSBS` (or `.3D.HTAB`), Kodi's naming convention, which most
+  headset video players use to recognise 3D.
+
+The video and audio are untouched: the box goes into the file's header after
+the usual passthrough export.
+
+This app converts Steam recordings only. Recordings from OBS or anything else
+outside Steam are out of scope.
+
+Apple's spatial video format (MV-HEVC), which Vimeo and the Vision Pro's own
+apps need, isn't produced. It means re-encoding rather than copying, and
+VideoToolbox only encodes it on Apple silicon.
 
 ## App icon
 
@@ -198,12 +227,13 @@ Sources/SteamClipConverter/
   Model/  Clip · ClipScanner (+MPD parser) · SteamLibrary · SteamTimeline
           ConversionLedger · SupportDirectory · AppModel
   Media/  DashAssembler · MediaProbe · ClipConverter · ChapterWriter
+          StereoLayout · StereoTagger
   Views/  ContentView · ClipCard
 ```
 
 ## AVFoundation notes
 
-Three things cost real debugging time and are easy to hit again:
+Four things cost real debugging time and are easy to hit again:
 
 1. **`AVAssetTrack` does not retain its `AVAsset`.** Creating an asset inline
    inside an `if let` lets it deallocate while the track is still in use; every
@@ -213,6 +243,9 @@ Three things cost real debugging time and are easy to hit again:
    the export with the same unexplained error.
 3. **Fragmented MP4 needs `AVURLAssetPreferPreciseDurationAndTimingKey`,** or the
    duration is approximate and composition inserts can misbehave.
+4. **A `.mov` sample description ends in a 4-byte zero terminator.** A box
+   appended after it is invisible to every parser, so `st3d` goes after the
+   last real child box instead.
 
 ## Safety and privacy
 
