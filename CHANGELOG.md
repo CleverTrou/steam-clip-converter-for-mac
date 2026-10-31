@@ -19,14 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   copied as before. ([#6](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/6))
 - **About Steam Clip Converter for Mac** now says what the app does, links to
   its source code on GitHub, and notes that it is not affiliated with Valve.
-  The README now says so too.
+  The README now says so too. ([#7](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/7))
 
 ### Fixed
 
 - Achievements you unlock while recording now appear on the clip's timeline
   and as chapters, named as the game names them ("Achievement: Trusty
   Hardware") when this Mac's Steam knows the game. Before, Steam's achievement
-  entries were silently skipped.
+  entries were silently skipped. ([#7](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/7))
 
 ## [1.1.0] - 2026-09-30
 
