@@ -205,7 +205,10 @@ final class SteamTimelineTests: XCTestCase {
                              kvString("version", "12"), kvString("gamename", "Half-Life 2: VR")) + Data([8])
         let names = AchievementSchema.parse(data)
         XCTAssertEqual(names, ["HL2_HIT_CANCOP_WITHCAN": "Defiant", "HL2_GET_CROWBAR": "Trusty Hardware"])
-        XCTAssertEqual(AchievementSchema.parse(data.prefix(data.count / 2)).count, 1, "keeps what precedes a truncation")
+        // A truncated file keeps the entries before the cut and invents none.
+        let partial = AchievementSchema.parse(data.prefix(data.count / 2))
+        XCTAssertFalse(partial.isEmpty)
+        XCTAssertTrue(partial.allSatisfy { names[$0.key] == $0.value })
     }
 
     func testNoTimelineMeansNoMarkers() {
