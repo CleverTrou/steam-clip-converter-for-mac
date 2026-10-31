@@ -96,7 +96,7 @@ tagging propagates through probing, thumbnails, scrubbing and export alike.
   them on each clip's thumbnail. See [Timeline chapters](#timeline-chapters).
 - **Marks what's already converted** and leaves it in place, including files
   produced by other tools (matched on capture timestamp).
-- **Tags clips recorded in 3D**, so YouTube plays side-by-side ones in 3D. See
+- **Tags clips recorded in 3D** with the stereo tag YouTube reads. See
   [3D recordings](#3d-recordings).
 
 ## Container choice
@@ -151,10 +151,11 @@ before converting. A 3D export:
 
 - carries the `st3d` stereo box that YouTube's
   [Upload 3D videos](https://support.google.com/youtube/answer/7278886) page
-  asks for. For side-by-side output YouTube then plays it in 3D, including in
-  its Apple Vision Pro and Meta Quest apps, once it has finished processing
-  the upload. That page names only side-by-side, so top-and-bottom output is
-  tagged correctly but isn't known to play in 3D there.
+  asks for. That page documents 3D playback for side-by-side uploads, once
+  YouTube has finished processing them. Playback in YouTube's Apple Vision
+  Pro and Meta Quest apps hasn't been tried yet. The page names only
+  side-by-side, so top-and-bottom output is tagged correctly but isn't known
+  to play in 3D on YouTube.
 - ends in `.3D.HSBS` (or `.3D.HTAB`), Kodi's naming convention, which most
   headset video players use to recognise 3D.
 

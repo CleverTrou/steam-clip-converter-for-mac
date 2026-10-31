@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A **3D layout** setting for games recorded in side-by-side or top-and-bottom
   3D (for example through ReShade's SuperDepth3D). 3D exports carry a stereo
-  tag. For side-by-side, that is the tag YouTube looks for, so the upload plays
-  in 3D, including in YouTube's Apple Vision Pro and Meta Quest apps. Exports
+  tag. For side-by-side, that is the tag YouTube's help says it needs to play
+  an upload in 3D. Exports
   also end in `.3D.HSBS` or `.3D.HTAB`, which headset video players recognise. The video and audio are
   copied as before. ([#6](https://github.com/CleverTrou/steam-clip-converter-for-mac/pull/6))
 

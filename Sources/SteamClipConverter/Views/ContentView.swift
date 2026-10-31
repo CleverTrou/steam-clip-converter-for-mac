@@ -299,9 +299,9 @@ struct ContentView: View {
                         .frame(width: 170)
                         .help("For a game recorded in 3D, such as one shown side-by-side through ReShade. "
                               + "3D output keeps the picture as it is, tags it, and adds .3D.HSBS or .3D.HTAB "
-                              + "to the name for players that go by name. YouTube, including its Vision Pro "
-                              + "and Quest apps, plays side-by-side uploads in 3D; its help names no other "
-                              + "layout. Steam doesn't record whether a game was in 3D.")
+                              + "to the name for players that go by name. YouTube's help documents 3D "
+                              + "playback for side-by-side uploads and names no other layout. Steam doesn't "
+                              + "record whether a game was in 3D.")
                     }
 
                     VStack(alignment: .leading, spacing: 3) {
