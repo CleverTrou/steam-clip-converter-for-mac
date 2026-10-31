@@ -5,6 +5,12 @@
 # Video is HEVC tagged hev1 (as Steam writes it); audio is AAC.
 set -euo pipefail
 ROOT="${1:?root}"
+
+# Refuse a real library: the gamerecording.pb written below replaces Steam's.
+if [ -d "$ROOT" ] && [ -n "$(ls -A "$ROOT")" ]; then
+    echo "$ROOT isn't empty; use a new or empty folder." >&2
+    exit 1
+fi
 mkdir -p "$ROOT/video"
 
 clip() { # appid date time WxH seconds lavfi-source
