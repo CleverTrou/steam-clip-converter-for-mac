@@ -28,7 +28,9 @@ enum AchievementSchema {
         var names: [String: String] = [:]
         func collect(_ node: BinaryKeyValues) {
             if let api = node.strings["name"],
-               let display = node.sections["display"]?.sections["name"]?.strings["english"] {
+               let display = node.sections["display"]?.sections["name"]?.strings["english"]?
+                   .trimmingCharacters(in: .whitespacesAndNewlines),
+               !display.isEmpty {   // a blank name would title the marker "Achievement: "
                 names[api] = display
             }
             node.sections.values.forEach(collect)

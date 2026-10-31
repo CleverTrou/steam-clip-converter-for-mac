@@ -200,7 +200,8 @@ final class SteamTimelineTests: XCTestCase {
         let data = kvSection("658920",
                              kvSection("stats", kvSection("1", kvInt("type", 4),
                                                           kvSection("bits", bit("7", "HL2_HIT_CANCOP_WITHCAN", "Defiant"),
-                                                                    bit("11", "HL2_GET_CROWBAR", "Trusty Hardware")))),
+                                                                    bit("11", "HL2_GET_CROWBAR", "Trusty Hardware"),
+                                                                    bit("12", "HL2_UNNAMED", " ")))),
                              kvString("version", "12"), kvString("gamename", "Half-Life 2: VR")) + Data([8])
         let names = AchievementSchema.parse(data)
         XCTAssertEqual(names, ["HL2_HIT_CANCOP_WITHCAN": "Defiant", "HL2_GET_CROWBAR": "Trusty Hardware"])
