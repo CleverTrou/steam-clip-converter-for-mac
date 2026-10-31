@@ -13,6 +13,9 @@ struct SteamClipConverterApp: App {
                 }
         }
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Steam Clip Converter for Mac") { AboutPanel.show() }
+            }
             CommandGroup(after: .newItem) {
                 Button("Choose Recordings Folder…") { model.chooseFolder() }
                     .keyboardShortcut("o", modifiers: .command)

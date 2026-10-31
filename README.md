@@ -277,3 +277,6 @@ with the export.
 
 [MIT](LICENSE) © 2026 Trevor Nelson. You're free to use, modify and redistribute
 it, as long as the copyright notice and license stay with every copy.
+
+Steam is a trademark of Valve Corporation. This app is not affiliated with or
+endorsed by Valve.

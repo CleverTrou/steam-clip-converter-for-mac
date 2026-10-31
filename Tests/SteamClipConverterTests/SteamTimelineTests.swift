@@ -110,6 +110,18 @@ final class SteamTimelineTests: XCTestCase {
         XCTAssertEqual(parsed.entries.map(\.title), ["User marker"])
     }
 
+    /// From a real Half-Life 2: VR Mod session: unlocks carry only an API name.
+    func testAchievementUnlocksBecomeMarkers() throws {
+        let parsed = try timeline("""
+          {"id":"1","time":"759386","type":"achievement","achievement_name":"HL2_HIT_CANCOP_WITHCAN"},
+          {"id":"3","time":"2065349","type":"achievement","achievement_name":"HL2_GET_CROWBAR"},
+          {"id":"4","time":"2065350","type":"achievement"}
+        """, end: 6_226_856)
+        XCTAssertEqual(parsed.entries.map(\.title),
+                       ["Achievement: HL2_HIT_CANCOP_WITHCAN", "Achievement: HL2_GET_CROWBAR"])
+        XCTAssertEqual(parsed.entries.map(\.achievement), ["HL2_HIT_CANCOP_WITHCAN", "HL2_GET_CROWBAR"])
+    }
+
     func testReadableTurnsTokensIntoSentences() {
         XCTAssertEqual(SteamTimeline.readable("#GameRecording_RecordingFailed"), "Recording failed")
         XCTAssertEqual(SteamTimeline.readable("#Timeline_UserMarker"), "User marker")
@@ -140,10 +152,63 @@ final class SteamTimelineTests: XCTestCase {
         let clip = Clip(id: "bg_250820_20260816_163133", url: clipFolder, appID: "250820", recordedAt: nil,
                         kind: .background, duration: 82.5, segmentDuration: 3, videoSegmentCount: 28,
                         byteSize: 0, probe: nil, gameName: nil)
-        let markers = SteamTimeline.markers(for: clip)
+        let markers = SteamTimeline.markers(for: clip, achievements: [:])
         XCTAssertEqual(markers.map(\.title), ["Spans the clip start", "Ten seconds in"])
         XCTAssertEqual(markers[0].time, 0)
         XCTAssertEqual(markers[1].time, 10, accuracy: 0.001)
+    }
+
+    func testAchievementMarkersUseDisplayNamesWhenKnown() throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: "timeline-test-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let clipFolder = root.appending(path: "video/bg_658920_20261028_185202")
+        try FileManager.default.createDirectory(at: clipFolder, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: root.appending(path: "timelines"), withIntermediateDirectories: true)
+
+        try index(timeline: "timeline_V", recordings: [("bg_658920_20261028_185202", 19_056)])
+            .write(to: root.appending(path: "gamerecording.pb"))
+        try Data("""
+        {"starttime":"0","entries":[
+          {"time":"759386","type":"achievement","achievement_name":"HL2_HIT_CANCOP_WITHCAN"},
+          {"time":"2065349","type":"achievement","achievement_name":"HL2_GET_CROWBAR"}
+        ]}
+        """.utf8).write(to: root.appending(path: "timelines/timeline_V.json"))
+
+        let clip = Clip(id: "bg_658920_20261028_185202", url: clipFolder, appID: "658920", recordedAt: nil,
+                        kind: .background, duration: 6205, segmentDuration: 3, videoSegmentCount: 2069,
+                        byteSize: 0, probe: nil, gameName: nil)
+        let markers = SteamTimeline.markers(for: clip, achievements: ["HL2_GET_CROWBAR": "Trusty Hardware"])
+        XCTAssertEqual(markers.map(\.title), ["Achievement: HL2_HIT_CANCOP_WITHCAN", "Achievement: Trusty Hardware"])
+        XCTAssertEqual(markers[0].time, 740.33, accuracy: 0.001)
+    }
+
+    // MARK: - Achievement schema
+
+    /// Binary KeyValues: type byte, NUL-terminated key, value; 8 closes a section.
+    private func kvString(_ key: String, _ value: String) -> Data { Data([1]) + Data(key.utf8) + Data([0]) + Data(value.utf8) + Data([0]) }
+    private func kvInt(_ key: String, _ value: UInt8) -> Data { Data([2]) + Data(key.utf8) + Data([0, value, 0, 0, 0]) }
+    private func kvSection(_ key: String, _ body: Data...) -> Data { Data([0]) + Data(key.utf8) + Data([0]) + body.reduce(Data(), +) + Data([8]) }
+
+    /// Mirrors the shape of a real UserGameStatsSchema_658920.bin.
+    func testSchemaMapsAPINamesToEnglishDisplayNames() {
+        func bit(_ n: String, _ api: String, _ name: String) -> Data {
+            kvSection(n, kvString("name", api),
+                      kvSection("display", kvSection("name", kvString("english", name), kvString("token", "NEW_ACHIEVEMENT_1_7_NAME")),
+                                kvSection("desc", kvString("english", "Hit the trashcan cop with the can."))),
+                      kvString("hidden", "1"), kvInt("bit", 7))
+        }
+        let data = kvSection("658920",
+                             kvSection("stats", kvSection("1", kvInt("type", 4),
+                                                          kvSection("bits", bit("7", "HL2_HIT_CANCOP_WITHCAN", "Defiant"),
+                                                                    bit("11", "HL2_GET_CROWBAR", "Trusty Hardware"),
+                                                                    bit("12", "HL2_UNNAMED", " ")))),
+                             kvString("version", "12"), kvString("gamename", "Half-Life 2: VR")) + Data([8])
+        let names = AchievementSchema.parse(data)
+        XCTAssertEqual(names, ["HL2_HIT_CANCOP_WITHCAN": "Defiant", "HL2_GET_CROWBAR": "Trusty Hardware"])
+        // A truncated file keeps the entries before the cut and invents none.
+        let partial = AchievementSchema.parse(data.prefix(data.count / 2))
+        XCTAssertFalse(partial.isEmpty)
+        XCTAssertTrue(partial.allSatisfy { names[$0.key] == $0.value })
     }
 
     func testNoTimelineMeansNoMarkers() {
