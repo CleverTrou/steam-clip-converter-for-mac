@@ -16,7 +16,13 @@ username in it. These tools regenerate both images the same way.
 Six clips laid out exactly like Steam's (`video/bg_<appid>_<date>_<time>/` with
 `session.mpd`, `init-stream*.m4s`, `chunk-stream*.m4s`), with HEVC tagged `hev1`
 and AAC audio. The visuals are ffmpeg test sources: fractals, Game of Life,
-Rule 110 and gradients. Needs ffmpeg with `hevc_videotoolbox`.
+Rule 110 and gradients. Needs ffmpeg with `hevc_videotoolbox`. It writes its own
+`gamerecording.pb`, so it only fills a new or empty folder: delete an old demo
+library before rebuilding it.
+
+Three of the clips also get a Steam timeline (`timelines/<id>.json`, indexed
+by `gamerecording.pb`), so their cards show event ticks and a "timeline
+events" line.
 
 ## 2. App state
 
