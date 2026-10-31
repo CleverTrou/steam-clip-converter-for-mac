@@ -81,7 +81,7 @@ for folder, offset, length, events in sessions:
     entries = [{"id": str(i + 1), "time": str(offset + t), "type": "event", "title": title,
                 "description": "", "priority": 40, "duration": "0"}
                for i, (t, title) in enumerate(events)]
-    with open(f"{root}/timelines/{timeline_id}.json", "w") as f:
+    with open(f"{root}/timelines/{timeline_id}.json", "x") as f:
         json.dump({"daterecorded": str(start), "starttime": "0", "endtime": str(end), "entries": entries}, f, indent="\t")
     recording = field(1, folder) + field(2, offset) + field(3, length)
     index += field(1, field(1, timeline_id) + field(2, int(appid)) + field(3, start) + field(4, end) + field(5, recording))
