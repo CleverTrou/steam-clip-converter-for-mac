@@ -21,18 +21,22 @@ struct ClipMarker: Hashable {
 enum SteamTimeline {
 
     /// Markers for `clip`, or none if Steam left no timeline for it.
-    static func markers(for clip: Clip) -> [ClipMarker] {
+    /// `achievements` maps API names to display names; by default it comes
+    /// from the schema Steam cached for the clip's game.
+    static func markers(for clip: Clip, achievements: [String: String]? = nil) -> [ClipMarker] {
         let root = clip.url.deletingLastPathComponent().deletingLastPathComponent()
         guard let placement = index(at: root)[clip.id],
               let timeline = Self.timeline(at: root.appending(path: "timelines/\(placement.timelineID).json"))
         else { return [] }
+        let names = achievements ?? AchievementSchema.names(appID: clip.appID)
 
         return timeline.entries.compactMap { entry -> ClipMarker? in
             let start = (entry.time - timeline.start - placement.offset) / 1000
             let end = start + (entry.duration ?? 0) / 1000
             // A range that began before the clip still marks where the clip opens.
             guard start < clip.duration, end >= 0 else { return nil }
-            return ClipMarker(time: max(start, 0), title: entry.title)
+            let title = entry.achievement.flatMap { names[$0] }.map(Timeline.achievementTitle) ?? entry.title
+            return ClipMarker(time: max(start, 0), title: title)
         }
         .sorted { $0.time < $1.time }
     }
@@ -86,7 +90,12 @@ enum SteamTimeline {
             let time: Double          // ms from the timeline start
             let duration: Double?     // ms, for events that span time
             let title: String
+            /// API name of an unlocked achievement ("HL2_GET_CROWBAR"), which
+            /// `title` falls back to when no display name is known.
+            var achievement: String? = nil
         }
+
+        static func achievementTitle(_ name: String) -> String { "Achievement: \(name)" }
 
         let start: Double
         let entries: [Entry]
@@ -109,6 +118,11 @@ enum SteamTimeline {
         ///   gamemode, phase    playing/menus flags and chapter ranges; the
         ///                      games also add an event for each chapter
         ///   error              Steam's own failures ("#GameRecording_RecordingFailed")
+        ///
+        /// and, from a Half-Life 2: VR Mod session:
+        ///
+        ///   achievement        an unlock, named only by its API name
+        ///                      ("achievement_name": "HL2_GET_CROWBAR")
         init?(data: Data) {
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
             start = Self.number(json["starttime"]) ?? 0
@@ -125,6 +139,10 @@ enum SteamTimeline {
                     continue
                 case "screenshot":
                     entries.append(Entry(time: time, duration: nil, title: "Screenshot"))
+                case "achievement":
+                    guard let name = Self.text(entry["achievement_name"]) else { continue }
+                    entries.append(Entry(time: time, duration: nil, title: Self.achievementTitle(name),
+                                         achievement: name))
                 case "state_description":
                     guard let state = Self.text(entry["title"]), state != lastState else { continue }
                     let next = raw[(i + 1)...].first { $0.entry["type"] as? String == "state_description" }?.time ?? end
